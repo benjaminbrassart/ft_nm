@@ -1,0 +1,4 @@
+/ft_nm
+*.o
+*.d
+/version.c
