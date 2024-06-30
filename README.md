@@ -12,8 +12,8 @@
 | `c`       | TODO                                                      |
 | `D`       | In `.data` (or similar) initialized data section (global) |
 | `d`       | In `.data` (or similar) initialized data section (local)  |
-| `D`       | In `.rodata` (or similar) read-only data section (global) |
-| `d`       | In `.rodata` (or similar) read-only data section (local)  |
+| `R`       | In `.rodata` (or similar) read-only data section (global) |
+| `r`       | In `.rodata` (or similar) read-only data section (local)  |
 | `T`       | In `.text` (or similar) executable code section (global)  |
 | `t`       | In `.text` (or similar) executable code section (local)   |
 | `U`       | Undefined symbol (defined in another object)              |
