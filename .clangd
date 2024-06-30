@@ -5,6 +5,7 @@ CompileFlags:
     - -Wconversion
     - -std=c99
     - -I.
+    - -Ilibft/include
     - -xc
 Diagnostics:
   UnusedIncludes: Strict
