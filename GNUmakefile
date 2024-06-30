@@ -6,7 +6,7 @@
 #    By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by benjamin          #+#    #+#              #
-#    Updated: 2024/06/30 14:59:07 by benjamin         ###   ########.fr        #
+#    Updated: 2024/06/30 16:26:50 by benjamin         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ DIR_LIBFT := ./libft
 NAME_LIBFT := libft.a
 DIR_OBJ := .
 
-SRC := main.c options.c config.c version.c
+SRC := main.c options.c config.c version.c memory_map.c
 OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 DEP := $(OBJ:.o=.d)
 
