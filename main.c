@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 18:47:48 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/06/30 19:59:42 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 #include "libft/ft.h"
 
+#include <ctype.h>
 #include <elf.h>
 
 #include <errno.h>
@@ -128,6 +129,46 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 			Elf64_Sym const *symbol = &symbol_table[j];
 			char const *symbol_name = &string_table[symbol->st_name];
 
+			char symbol_type_char = '?';
+
+			if (symbol->st_shndx == SHN_UNDEF) {
+				symbol_type_char = 'U';
+			} else if ((symbol->st_info & 0x0F) == STT_FILE) {
+				continue;
+			} else {
+				Elf64_Shdr const *symbol_section = &shdr[symbol->st_shndx];
+				char const *symbol_section_name = &section_header_string_table[symbol_section->sh_name];
+
+				if (strcmp(symbol_section_name, ".bss") == 0) {
+					symbol_type_char = 'B';
+				} else if (strcmp(symbol_section_name, ".data") == 0 || strcmp(symbol_section_name, ".dynamic") == 0 || strcmp(symbol_section_name, ".got.plt") == 0 || strcmp(symbol_section_name, ".data.rel.ro") == 0) {
+					symbol_type_char = 'D';
+				} else if (strcmp(symbol_section_name, ".rodata") == 0 || strcmp(symbol_section_name, ".eh_frame_hdr") == 0) {
+					symbol_type_char = 'R';
+				} else if (strcmp(symbol_section_name, ".text") == 0 || strcmp(symbol_section_name, ".init") == 0 || strcmp(symbol_section_name, ".fini") == 0) {
+					symbol_type_char = 'T';
+				}
+			}
+
+			switch ((symbol->st_info >> 4) & 0xF) {
+			case STB_LOCAL:
+				symbol_type_char = (char)tolower(symbol_type_char);
+				break;
+
+			case STB_WEAK:
+				if (symbol->st_shndx == SHN_UNDEF) {
+					symbol_type_char = 'w';
+				} else {
+					symbol_type_char = 'W';
+				}
+				break;
+
+			default:
+				break;
+			}
+
+			write(STDOUT_FILENO, &symbol_type_char, 1);
+			write(STDOUT_FILENO, " ", 1);
 			write(STDOUT_FILENO, symbol_name, strlen(symbol_name));
 			write(STDOUT_FILENO, "\n", 1);
 		}
