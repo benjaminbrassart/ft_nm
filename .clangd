@@ -1,0 +1,11 @@
+CompileFlags:
+  Add:
+    - -Wall
+    - -Wextra
+    - -Wconversion
+    - -std=c99
+    - -I.
+    - -xc
+Diagnostics:
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
