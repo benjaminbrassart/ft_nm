@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 20:04:03 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/06/30 23:35:07 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 
 #include "libft/ft.h"
 
-#include <ctype.h>
 #include <elf.h>
 
 #include <errno.h>
@@ -78,29 +77,95 @@ static int ft_nm_elf32(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const
 	return EXIT_SUCCESS;
 }
 
+static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr)
+{
+	Elf64_Section const st_shndx = symbol->st_shndx;
+	unsigned char const st_bind = ELF64_ST_BIND(symbol->st_info);
+	unsigned char const st_type = ELF64_ST_TYPE(symbol->st_info);
+
+	if (st_shndx == SHN_ABS) {
+		if (st_type == STT_FILE) {
+			return 'a';
+		} else {
+			return 'A';
+		}
+	} else if (st_shndx == SHN_COMMON) {
+		return 'C';
+	}
+
+	Elf64_Shdr const *section;
+
+	section = &shdr[st_shndx];
+
+	Elf64_Word const sh_type = section->sh_type;
+	Elf64_Xword const sh_flags = section->sh_flags;
+
+	char sym_char = '?';
+
+	if (st_bind == STB_GNU_UNIQUE) {
+		sym_char = 'u';
+	} else if (st_shndx == SHN_UNDEF) {
+		sym_char = 'U';
+
+		if (st_bind == STB_WEAK) {
+			if (st_type == STT_OBJECT) {
+				sym_char = 'v';
+			} else {
+				sym_char = 'w';
+			}
+		}
+	} else if (st_bind == STB_WEAK) {
+		if (st_type == STT_OBJECT) {
+			sym_char = 'V';
+		} else {
+			sym_char = 'W';
+		}
+	} else if (sh_type == SHT_PROGBITS && sh_flags == SHF_ALLOC) {
+		if ((sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR) {
+			sym_char = 'T';
+		} else {
+			sym_char = 'R';
+		}
+	} else if (sh_type == SHT_NOBITS && sh_flags == (SHF_ALLOC|SHF_WRITE)) {
+		sym_char = 'B';
+	} else if (sh_type == SHT_PROGBITS && (sh_flags & (SHF_ALLOC|SHF_WRITE)) == (SHF_ALLOC|SHF_WRITE)) {
+		sym_char = 'D';
+	} else if (st_type == STT_FUNC) {
+		sym_char = 'T';
+	} else if (st_type == STT_OBJECT) {
+		sym_char = 'D';
+	} else {
+		sym_char = '?';
+	}
+
+	if (st_bind == STB_LOCAL) {
+		sym_char = (char)ft_tolower(sym_char);
+	}
+
+	return sym_char;
+}
+
 static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
 {
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
-	char const *section_header_string_table;
+
+	Elf64_Shdr const *section_string_table_shdr = &shdr[ehdr->e_shstrndx];
+	char const *section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
+
 	char const *symbol_string_table = NULL;
 	char const *dynamic_string_table = NULL;
 
-	Elf64_Shdr const *section_string_table_shdr = &shdr[ehdr->e_shstrndx];
-
-	section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
-
 	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
 		Elf64_Shdr const *section = &shdr[i];
+		char const *section_name = &section_header_string_table[section->sh_name];
 
 		if (section->sh_type != SHT_STRTAB) {
 			continue;
 		}
 
-		char const *section_name = &section_header_string_table[section->sh_name];
-
-		if (strcmp(section_name, ".strtab") == 0) {
+		if (ft_strcmp(section_name, ".strtab") == 0) {
 			symbol_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
-		} else if (strcmp(section_name, ".dynstr") == 0) {
+		} else if (ft_strcmp(section_name, ".dynstr") == 0) {
 			dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
 		}
 	}
@@ -133,47 +198,63 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 				continue;
 			}
 
-			char symbol_type_char = '?';
+			// char symbol_type_char = '?';
 
-			if (symbol->st_shndx == SHN_UNDEF) {
-				symbol_type_char = 'U';
-			} else if ((symbol->st_info & 0x0F) == STT_FILE) {
-				continue;
-			} else {
-				Elf64_Shdr const *symbol_section = &shdr[symbol->st_shndx];
-				char const *symbol_section_name = &section_header_string_table[symbol_section->sh_name];
+			// if (ELF64_ST_BIND(symbol->st_info) == STB_GNU_UNIQUE) {
+			// 	symbol_type_char = 'u';
+			// } else if (ELF64_ST_BIND(symbol->st_info) == STB_WEAK) {
+			// 	if (symbol->st_shndx == SHN_UNDEF) {
 
-				if (strcmp(symbol_section_name, ".bss") == 0) {
-					symbol_type_char = 'B';
-				} else if (strcmp(symbol_section_name, ".data") == 0 || strcmp(symbol_section_name, ".dynamic") == 0 || strcmp(symbol_section_name, ".got.plt") == 0 || strcmp(symbol_section_name, ".data.rel.ro") == 0) {
-					symbol_type_char = 'D';
-				} else if (strcmp(symbol_section_name, ".rodata") == 0 || strcmp(symbol_section_name, ".eh_frame_hdr") == 0) {
-					symbol_type_char = 'R';
-				} else if (strcmp(symbol_section_name, ".text") == 0 || strcmp(symbol_section_name, ".init") == 0 || strcmp(symbol_section_name, ".fini") == 0) {
-					symbol_type_char = 'T';
-				}
-			}
+			// 	}
+			// }
 
-			switch ((symbol->st_info >> 4) & 0xF) {
-			case STB_LOCAL:
-				symbol_type_char = (char)tolower(symbol_type_char);
-				break;
+			// if (symbol->st_shndx == SHN_UNDEF) {
+			// 	symbol_type_char = 'U';
+			// } else if ((symbol->st_info & 0x0F) == STT_FILE) {
+			// 	symbol_type_char = 'a';
+			// } else {
+			// 	Elf64_Shdr const *symbol_section = &shdr[symbol->st_shndx];
+			// 	char const *symbol_section_name = &section_header_string_table[symbol_section->sh_name];
 
-			case STB_WEAK:
-				if (symbol->st_shndx == SHN_UNDEF) {
-					symbol_type_char = 'w';
-				} else {
-					symbol_type_char = 'W';
-				}
-				break;
+			// 	if (symbol_section_name ==  section_names._bss) {
+			// 		symbol_type_char = 'B';
+			// 	} else if (symbol_section_name == section_names._data || symbol_section_name == section_names._dynamic || symbol_section_name == section_names._got_plt || symbol_section_name == section_names._data_rel_ro) {
+			// 		symbol_type_char = 'D';
+			// 	} else if (symbol_section_name == section_names._rodata || symbol_section_name == section_names._eh_frame_hdr) {
+			// 		symbol_type_char = 'R';
+			// 	} else if (symbol_section_name == section_names._text || symbol_section_name == section_names._init || symbol_section_name == section_names._fini) {
+			// 		symbol_type_char = 'T';
+			// 	} else {
+			// 		symbol_type_char = '!';
+			// 	}
+			// }
 
-			default:
-				break;
-			}
+			// switch ((symbol->st_info >> 4) & 0xF) {
+			// case STB_LOCAL:
+			// 	symbol_type_char = (char)tolower(symbol_type_char);
+			// 	break;
+
+			// case STB_WEAK:
+			// 	if (symbol->st_shndx == SHN_UNDEF) {
+			// 		symbol_type_char = 'w';
+			// 	} else {
+			// 		symbol_type_char = 'W';
+			// 	}
+			// 	break;
+
+			// case STB_GNU_UNIQUE:
+			// 	symbol_type_char = 'u';
+			// 	break;
+
+			// default:
+			// 	break;
+			// }
+
+			char symbol_type_char = _elf64_symbol_type_char(symbol, shdr);
 
 			write(STDOUT_FILENO, &symbol_type_char, 1);
 			write(STDOUT_FILENO, " ", 1);
-			write(STDOUT_FILENO, symbol_name, strlen(symbol_name));
+			write(STDOUT_FILENO, symbol_name, ft_strlen(symbol_name));
 			write(STDOUT_FILENO, "\n", 1);
 		}
 	}
