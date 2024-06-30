@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 19:59:42 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/06/30 20:04:03 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,10 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 		for (Elf64_Xword j = 0; j < sym_count; j += 1) {
 			Elf64_Sym const *symbol = &symbol_table[j];
 			char const *symbol_name = &string_table[symbol->st_name];
+
+			if (symbol_name[0] == '\0') {
+				continue;
+			}
 
 			char symbol_type_char = '?';
 

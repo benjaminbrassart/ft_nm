@@ -46,8 +46,6 @@ T mm_read
 T parse_options
 t _shift
 T _start
-u 
-u 
 U close
 U close@GLIBC_2.2.5
 U __errno_location
