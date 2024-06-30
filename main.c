@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 14:38:44 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/06/30 14:57:50 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,17 @@
 #include "options.h"
 #include "version.h"
 
+#include "libft/ft.h"
+
 #include <stdlib.h>
-#include <string.h>
 
 #include <unistd.h>
 
 int main(int argc, char const *argv[])
 {
-	struct config config = DEFAULT_CONFIG;
+	struct config config;
+
+	ft_memcpy(&config, &DEFAULT_CONFIG, sizeof(struct config));
 
 	switch (parse_options(&argc, argv, &config)) {
 	case ParseConfigEarlyExit:
@@ -34,7 +37,7 @@ int main(int argc, char const *argv[])
 
 	if (config.display_version) {
 		write(STDOUT_FILENO, "ft_nm version ", 14);
-		write(STDOUT_FILENO, VERSION_STRING, strlen(VERSION_STRING));
+		write(STDOUT_FILENO, VERSION_STRING, ft_strlen(VERSION_STRING));
 		write(STDOUT_FILENO,
 			"\n"
 			"\n"

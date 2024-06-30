@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 11:00:24 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 14:04:04 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/06/30 14:56:34 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,11 @@
 #include "config.h"
 #include "options.h"
 
+#include "libft/ft.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <string.h>
 #include <unistd.h>
 
 #define sizeof_array(Array) (sizeof(Array)/sizeof(Array[0]))
@@ -94,7 +95,7 @@ static void _display_help(int fd)
 {
 	static char padding_buffer[80];
 
-	memset(padding_buffer, ' ', sizeof(padding_buffer));
+	ft_memset(padding_buffer, ' ', sizeof(padding_buffer));
 
 	char line_buffer[81];
 	static char const usage[] = \
@@ -114,7 +115,7 @@ static void _display_help(int fd)
 		opt = &OPTIONS[i];
 
 		if (opt->opt_long != NULL) {
-			option_name_len = strlen(opt->opt_long);
+			option_name_len = ft_strlen(opt->opt_long);
 			if (option_name_len > longest_option_name) {
 				longest_option_name = option_name_len;
 			}
@@ -126,25 +127,25 @@ static void _display_help(int fd)
 
 	for (size_t i = 0; i < sizeof_array(OPTIONS); i += 1) {
 		opt = &OPTIONS[i];
-		memset(line_buffer, '\0', sizeof(line_buffer));
+		ft_memset(line_buffer, '\0', sizeof(line_buffer));
 
 		if (opt->opt_short != 0) {
-			strcat(line_buffer, "  -?, ");
+			ft_strlcat(line_buffer, "  -?, ", sizeof(line_buffer));
 			line_buffer[3] = (char)opt->opt_short;
 		} else {
-			strcat(line_buffer, "      ");
+			ft_strlcat(line_buffer, "      ", sizeof(line_buffer));
 		}
 
 		if (opt->opt_long != NULL) {
-			option_name_len = strlen(opt->opt_long);
-			strcat(line_buffer, "--");
-			strcat(line_buffer, opt->opt_long);
+			option_name_len = ft_strlen(opt->opt_long);
+			ft_strlcat(line_buffer, "--", sizeof(line_buffer));
+			ft_strlcat(line_buffer, opt->opt_long, sizeof(line_buffer));
 			long_padding = longest_option_name - option_name_len;
 		} else {
 			long_padding = longest_option_name;
 		}
 
-		strncat(line_buffer, padding_buffer, long_padding + 1);
+		ft_strlcat(line_buffer, padding_buffer + (sizeof(padding_buffer) - (long_padding + 1)), sizeof(line_buffer));
 
 		char const *description = opt->description;
 		size_t desc_offset = longest_option_name + 9;
@@ -152,14 +153,14 @@ static void _display_help(int fd)
 
 		while (*description != '\0') {
 			if (description != opt->description) {
-				strncpy(line_buffer, padding_buffer, desc_offset);
+				ft_strlcpy(line_buffer, padding_buffer, desc_offset);
 				line_buffer[desc_offset] = '\0';
 			}
-			desc_frag_len = strnlen(description, 80 - desc_offset);
+			desc_frag_len = ft_strnlen(description, 80 - desc_offset);
 
-			strncat(line_buffer, description, desc_frag_len);
+			ft_strlcat(line_buffer, description, sizeof(line_buffer));
 			description += desc_frag_len;
-			buffer_len = strlen(line_buffer);
+			buffer_len = ft_strlen(line_buffer);
 			line_buffer[buffer_len] = '\n';
 			write(fd, line_buffer, buffer_len + 1);
 		}
@@ -185,21 +186,21 @@ static int _handle_option(enum option_name name, char const *value, struct confi
 		conf->undefined_only = 1;
 		break;
 	case OptionUnicode:
-		if (strcmp(value, "default") == 0) {
+		if (ft_strcmp(value, "default") == 0) {
 			conf->unicode_display = UnicodeDisplayDefault;
-		} else if (strcmp(value, "show") == 0) {
+		} else if (ft_strcmp(value, "show") == 0) {
 			conf->unicode_display = UnicodeDisplayShow;
-		} else if (strcmp(value, "invalid") == 0) {
+		} else if (ft_strcmp(value, "invalid") == 0) {
 			conf->unicode_display = UnicodeDisplayInvalid;
-		} else if (strcmp(value, "hex") == 0) {
+		} else if (ft_strcmp(value, "hex") == 0) {
 			conf->unicode_display = UnicodeDisplayHex;
-		} else if (strcmp(value, "escape") == 0) {
+		} else if (ft_strcmp(value, "escape") == 0) {
 			conf->unicode_display = UnicodeDisplayEscape;
-		} else if (strcmp(value, "highlight") == 0) {
+		} else if (ft_strcmp(value, "highlight") == 0) {
 			conf->unicode_display = UnicodeDisplayHighlight;
 		} else {
 			write(STDERR_FILENO, "ft_nm: invalid argument to -U/--unicode: ", 41);
-			write(STDERR_FILENO, value, strlen(value));
+			write(STDERR_FILENO, value, ft_strlen(value));
 			write(STDERR_FILENO, "\n", 1);
 			return EXIT_FAILURE;
 		}
@@ -228,11 +229,11 @@ static void _shift(int index, int *argc, char const *argv[])
 // static struct option const *_get_option_short();
 static struct option const *_get_option_long(char const *name, char const **opt_val)
 {
-	char const *eq = strchr(name, '=');
+	char const *eq = ft_strchr(name, '=');
 	size_t cmp_len;
 
 	if (eq == NULL) {
-		cmp_len = strlen(name);
+		cmp_len = ft_strlen(name);
 		*opt_val = NULL;
 	} else {
 		cmp_len = (size_t)(eq - name);
@@ -240,7 +241,7 @@ static struct option const *_get_option_long(char const *name, char const **opt_
 	}
 
 	for (size_t i = 0; i < sizeof_array(OPTIONS); i += 1) {
-		if (strncmp(OPTIONS[i].opt_long, name, cmp_len) == 0 && OPTIONS[i].opt_long[cmp_len] == '\0') {
+		if (ft_strncmp(OPTIONS[i].opt_long, name, cmp_len) == 0 && OPTIONS[i].opt_long[cmp_len] == '\0') {
 			return &OPTIONS[i];
 		}
 	}
@@ -308,7 +309,7 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 			opt = _get_option_long(&argv[i][2], &opt_val);
 			if (opt == NULL) {
 				write(STDERR_FILENO, "ft_nm: unrecognized option '", 28);
-				write(STDERR_FILENO, argv[i], strlen(argv[i]));
+				write(STDERR_FILENO, argv[i], ft_strlen(argv[i]));
 				write(STDERR_FILENO, "'\n", 2);
 				_display_help(STDERR_FILENO);
 				return EXIT_FAILURE;
@@ -322,7 +323,7 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 
 				if (opt_val == NULL) {
 					write(STDERR_FILENO, "ft_nm: option '", 15);
-					write(STDERR_FILENO, argv[i], strlen(opt->opt_long) + 2);
+					write(STDERR_FILENO, argv[i], ft_strlen(opt->opt_long) + 2);
 					write(STDERR_FILENO, "' requires an argument\n", 23);
 					_display_help(STDERR_FILENO);
 					return EXIT_FAILURE;
@@ -340,7 +341,7 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 			case OptionValueDenied:
 				if (opt_val != NULL) {
 					write(STDERR_FILENO, "ft_nm: option '", 15);
-					write(STDERR_FILENO, argv[i], strlen(opt->opt_long) + 2);
+					write(STDERR_FILENO, argv[i], ft_strlen(opt->opt_long) + 2);
 					write(STDERR_FILENO, "' doesn't allow an argument\n", 28);
 					_display_help(STDERR_FILENO);
 					return EXIT_FAILURE;
