@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 00:15:09 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 00:17:29 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,7 +357,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	struct symbol *symbol;
 
 	for (size_t i = 0; i < sym_i; i += 1) {
-		symbol = &symbols[config->reverse_sort ? sym_i - i - 1 : i];
+		symbol = &symbols[(!config->no_sort && config->reverse_sort) ? sym_i - i - 1 : i];
 
 		if (symbol->name == NULL) {
 			continue;
