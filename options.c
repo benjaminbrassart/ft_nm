@@ -22,72 +22,31 @@
 
 #define sizeof_array(Array) (sizeof(Array)/sizeof(Array[0]))
 
+#define OPT_SHORT(Name, Short, Policy, Description, EarlyExit) \
+	OPT(Name, Short, NULL, Policy, Description, EarlyExit)
+
+#define OPT_LONG(Name, Long, Policy, Description, EarlyExit) \
+	OPT(Name, '\0', Long, Policy, Description, EarlyExit)
+
+#define OPT(Name, Short, Long, Policy, Description, EarlyExit) \
+	{ \
+		.name = Option ## Name, \
+		.opt_short = Short, \
+		.opt_long = Long, \
+		.value_policy = OptionValue ## Policy, \
+		.description = Description, \
+		.early_exit = EarlyExit, \
+	}
+
 static struct option const OPTIONS[] = {
-	{
-		.name = OptionDebugSymbols,
-		.opt_short = 'a',
-		.opt_long = "debug-syms",
-		.value_policy = OptionValueDenied,
-		.description = "Display debugger-only symbols",
-		.early_exit = false,
-	},
-	{
-		.name = OptionExternOnly,
-		.opt_short = 'g',
-		.opt_long = "extern-only",
-		.value_policy = OptionValueDenied,
-		.description = "Display only external symbols",
-		.early_exit = false,
-	},
-	{
-		.name = OptionNoSort,
-		.opt_short = 'p',
-		.opt_long = "no-sort",
-		.value_policy = OptionValueDenied,
-		.description = "Do not sort the symbols",
-		.early_exit = false,
-	},
-	{
-		.name = OptionReverseSort,
-		.opt_short = 'r',
-		.opt_long = "reverse-sort",
-		.value_policy = OptionValueDenied,
-		// weird sentence from gnu nm
-		.description = "Reverse the sense of the sort",
-		.early_exit = false,
-	},
-	{
-		.name = OptionUndefinedOnly,
-		.opt_short = 'u',
-		.opt_long = "undefined-only",
-		.value_policy = OptionValueDenied,
-		.description = "Display only undefined symbols",
-		.early_exit = false,
-	},
-	{
-		.name = OptionUnicode,
-		.opt_short = 0,
-		.opt_long = "unicode",
-		.value_policy = OptionValueRequired,
-		.description = "Specify how to treat UTF-8 encoded unicode characters",
-		.early_exit = false,
-	},
-	{
-		.name = OptionHelp,
-		.opt_short = 'h',
-		.opt_long = "help",
-		.value_policy = OptionValueDenied,
-		.description = "Display help information and exit",
-		.early_exit = true,
-	},
-	{
-		.name = OptionVersion,
-		.opt_short = 'V',
-		.opt_long = "version",
-		.value_policy = OptionValueDenied,
-		.description = "Display version and exit",
-		.early_exit = false,
-	},
+	OPT(DebugSymbols, 'a', "debug-syms", Denied, "Display debugger-only symbols", false),
+	OPT(ExternOnly, 'g', "extern-only", Denied, "Display only external symbols", false),
+	OPT(NoSort, 'p', "no-sort", Denied, "Do not sort the symbols", false),
+	OPT(ReverseSort, 'r', "reverse-sort", Denied, "Reverse the sense of the sort", false),
+	OPT(UndefinedOnly, 'u', "undefined-only", Denied, "Display only undefined symbols", false),
+	OPT_LONG(Unicode, "unicode", Required, "Specify how to treat UTF-8 encoded unicode characters", false),
+	OPT(Help, 'h', "help", Denied, "Display help information and exit", true),
+	OPT(Version, 'V', "version", Denied, "Display version and exit", false),
 };
 
 static void _display_help(int fd)
