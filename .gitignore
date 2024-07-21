@@ -3,3 +3,4 @@
 *.d
 /version.c
 vgcore.*
+/logs/
