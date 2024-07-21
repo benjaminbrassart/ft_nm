@@ -4,6 +4,7 @@
 # shellcheck shell=dash
 
 test_count=0
+status=0
 
 test_nm() {
     test_count=$((test_count + 1))
@@ -16,6 +17,12 @@ test_nm() {
 
     git --no-pager diff --no-index --word-diff=color --word-diff-regex=. "logs/${test_count}.stdout.ft.log" "logs/${test_count}.stdout.nm.log"
     git --no-pager diff --no-index --word-diff --word-diff-regex=. "logs/${test_count}.stdout.ft.log" "logs/${test_count}.stdout.nm.log" > "logs/${test_count}.diff"
+
+    current_status="$?"
+
+    if [ "${current_status}" -ne "0" ]; then
+        status="${current_status}"
+    fi
 
     printf -- '\n=================================\n\n'
 }
@@ -33,3 +40,7 @@ test_nm -a a.out
 
 test_nm -a --
 test_nm -a -- a.out
+
+test_nm -r
+
+exit "${status}"
