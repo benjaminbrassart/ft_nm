@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
+/*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/07/01 19:25:39 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/07/21 05:23:08 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,6 +29,12 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+struct symbol {
+	uint64_t offset;
+	char const *name;
+	char type_char;
+};
 
 char const COPYRIGHT_NOTICE[] =
 	"\n"
@@ -147,6 +154,23 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 	return sym_char;
 }
 
+static int _compare_symbol(void const *p1, void const *p2)
+{
+	char const *s1 = ((struct symbol const *)p1)->name;
+	char const *s2 = ((struct symbol const *)p2)->name;
+
+	while (*s1 == '_') {
+		s1 += 1;
+	}
+
+	while (*s2 == '_') {
+		s2 += 1;
+	}
+
+	// TODO implement ft_strcasecmp
+	return strcasecmp(s1, s2);
+}
+
 static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
 {
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
@@ -171,6 +195,33 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 			dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
 		}
 	}
+
+	size_t total_symbols = 0;
+	struct symbol *symbols = NULL;
+
+	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
+		Elf64_Shdr const *section = &shdr[i];
+
+		switch (section->sh_type) {
+		case SHT_DYNSYM:
+		case SHT_SYMTAB:
+			break;
+
+		default:
+			continue;
+		}
+
+		Elf64_Xword sym_count = section->sh_size / section->sh_entsize;
+
+		total_symbols += sym_count;
+	}
+
+	symbols = ft_calloc(total_symbols, sizeof(*symbols));
+	if (symbols == NULL) {
+		return EXIT_FAILURE;
+	}
+
+	size_t sym_i = 0;
 
 	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
 		Elf64_Shdr const *section = &shdr[i];
@@ -252,14 +303,27 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 			// 	break;
 			// }
 
-			char symbol_type_char = _elf64_symbol_type_char(symbol, shdr);
+			symbols[sym_i].offset = 0; // TODO
+			symbols[sym_i].name = symbol_name;
+			symbols[sym_i].type_char = _elf64_symbol_type_char(symbol, shdr);
 
-			write(STDOUT_FILENO, &symbol_type_char, 1);
-			write(STDOUT_FILENO, " ", 1);
-			write(STDOUT_FILENO, symbol_name, ft_strlen(symbol_name));
-			write(STDOUT_FILENO, "\n", 1);
+			sym_i += 1;
 		}
 	}
+
+	// TODO implement ft_qsort
+	qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
+
+	for (size_t i = 0; i < sym_i; i += 1) {
+		write(STDOUT_FILENO, "                ", 16); // TODO
+		write(STDOUT_FILENO, " ", 1);
+		write(STDOUT_FILENO, &symbols[i].type_char, 1);
+		write(STDOUT_FILENO, " ", 1);
+		write(STDOUT_FILENO, symbols[i].name, ft_strlen(symbols[i].name));
+		write(STDOUT_FILENO, "\n", 1);
+	}
+
+	free(symbols);
 
 	(void)mm;
 	(void)ehdr;
@@ -271,7 +335,6 @@ static int ft_nm_elf(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *
 {
 	switch (ehdr->e_ident[EI_CLASS]) {
 	case ELFCLASS32:
-
 		return ft_nm_elf32(mm, ehdr, file);
 
 	case ELFCLASS64: {

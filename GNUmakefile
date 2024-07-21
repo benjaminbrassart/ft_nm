@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    GNUmakefile                                        :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+         #
+#    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by benjamin          #+#    #+#              #
-#    Updated: 2024/06/30 16:26:50 by benjamin         ###   ########.fr        #
+#    Updated: 2024/07/21 05:18:29 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,8 +21,8 @@ SRC := main.c options.c config.c version.c memory_map.c
 OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 DEP := $(OBJ:.o=.d)
 
-CFLAGS := -Wall -Wextra -Wconversion -g0 -O0
-CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c99 -MMD -MP
+CFLAGS := -Wall -Wextra -Wconversion -ggdb -O0
+CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c99 -MMD -MP -D_GNU_SOURCE
 
 $(NAME): .EXTRA_PREREQS = $(DIR_LIBFT)/$(NAME_LIBFT)
 $(NAME): $(OBJ)

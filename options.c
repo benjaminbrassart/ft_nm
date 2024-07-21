@@ -3,14 +3,12 @@
 /*                                                        :::      ::::::::   */
 /*   options.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
+/*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 11:00:24 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 14:56:34 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/07/21 05:18:36 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-#define _GNU_SOURCE
 
 #include "config.h"
 #include "options.h"
