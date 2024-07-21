@@ -6,7 +6,7 @@
 /*   By: benjamin <benjamin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/06/30 23:35:07 by benjamin         ###   ########.fr       */
+/*   Updated: 2024/07/01 19:25:39 by benjamin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+char const COPYRIGHT_NOTICE[] =
+	"\n"
+	"\n"
+	"Copyright (C) 2024 Benjamin Brassart\n"
+	"\n"
+	"This program is free and open source software.\n"
+	"You may redistribute it under the terms of the MIT license.\n"
+	"\n"
+	"Report bugs and issues at https://github.com/bemjaminbrassart/ft_nm\n";
+
 static int ft_nm(char const *files[], int n);
 
 int main(int argc, char const *argv[])
@@ -49,15 +59,7 @@ int main(int argc, char const *argv[])
 	if (config.display_version) {
 		write(STDOUT_FILENO, "ft_nm version ", 14);
 		write(STDOUT_FILENO, VERSION_STRING, ft_strlen(VERSION_STRING));
-		write(STDOUT_FILENO,
-			"\n"
-			"\n"
-			"Copyright (C) 2024 Benjamin Brassart\n"
-			"\n"
-			"This program is free and open source software.\n"
-			"You may redistribute it under the terms of the MIT license.\n"
-			"\n"
-			"Report bugs and issues at https://github.com/bemjaminbrassart/ft_nm\n", 216);
+		write(STDOUT_FILENO, COPYRIGHT_NOTICE, sizeof(COPYRIGHT_NOTICE) - 1);
 		return EXIT_SUCCESS;
 	}
 
