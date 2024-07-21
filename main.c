@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/07/21 05:23:08 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/21 19:35:30 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,6 +33,7 @@
 
 struct symbol {
 	uint64_t offset;
+	int has_address;
 	char const *name;
 	char type_char;
 };
@@ -156,19 +158,35 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 
 static int _compare_symbol(void const *p1, void const *p2)
 {
-	char const *s1 = ((struct symbol const *)p1)->name;
-	char const *s2 = ((struct symbol const *)p2)->name;
+	struct symbol const *sym1 = p1;
+	struct symbol const *sym2 = p2;
+	char const *s1 = sym1->name;
+	char const *s2 = sym2->name;
 
-	while (*s1 == '_') {
-		s1 += 1;
+	while (1) {
+		while (*s1 == '_') {
+			s1 += 1;
+		}
+
+		while (*s2 == '_') {
+			s2 += 1;
+		}
+
+		if (*s1 != '\0' && ft_toupper(*s1) == ft_toupper(*s2)) {
+			s1 += 1;
+			s2 += 1;
+		} else {
+			break;
+		}
 	}
 
-	while (*s2 == '_') {
-		s2 += 1;
+	// without '_' s1 and s2 are the same (case-insensitive)
+	// perform case-sensitive ascii string comparison
+	if (*s1 == '\0' && *s2 == '\0') {
+		return ft_strcmp(sym1->name, sym2->name);
 	}
 
-	// TODO implement ft_strcasecmp
-	return strcasecmp(s1, s2);
+	return ft_toupper(*s1) - ft_toupper(*s2);
 }
 
 static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
@@ -247,65 +265,34 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 			Elf64_Sym const *symbol = &symbol_table[j];
 			char const *symbol_name = &string_table[symbol->st_name];
 
-			if (symbol_name[0] == '\0') {
+			char type_char = _elf64_symbol_type_char(symbol, shdr);
+
+			if (type_char == 'u' && symbol_name[0] == '\0') {
 				continue;
 			}
 
-			// char symbol_type_char = '?';
-
-			// if (ELF64_ST_BIND(symbol->st_info) == STB_GNU_UNIQUE) {
-			// 	symbol_type_char = 'u';
-			// } else if (ELF64_ST_BIND(symbol->st_info) == STB_WEAK) {
-			// 	if (symbol->st_shndx == SHN_UNDEF) {
-
-			// 	}
-			// }
-
-			// if (symbol->st_shndx == SHN_UNDEF) {
-			// 	symbol_type_char = 'U';
-			// } else if ((symbol->st_info & 0x0F) == STT_FILE) {
-			// 	symbol_type_char = 'a';
-			// } else {
-			// 	Elf64_Shdr const *symbol_section = &shdr[symbol->st_shndx];
-			// 	char const *symbol_section_name = &section_header_string_table[symbol_section->sh_name];
-
-			// 	if (symbol_section_name ==  section_names._bss) {
-			// 		symbol_type_char = 'B';
-			// 	} else if (symbol_section_name == section_names._data || symbol_section_name == section_names._dynamic || symbol_section_name == section_names._got_plt || symbol_section_name == section_names._data_rel_ro) {
-			// 		symbol_type_char = 'D';
-			// 	} else if (symbol_section_name == section_names._rodata || symbol_section_name == section_names._eh_frame_hdr) {
-			// 		symbol_type_char = 'R';
-			// 	} else if (symbol_section_name == section_names._text || symbol_section_name == section_names._init || symbol_section_name == section_names._fini) {
-			// 		symbol_type_char = 'T';
-			// 	} else {
-			// 		symbol_type_char = '!';
-			// 	}
-			// }
-
-			// switch ((symbol->st_info >> 4) & 0xF) {
-			// case STB_LOCAL:
-			// 	symbol_type_char = (char)tolower(symbol_type_char);
-			// 	break;
-
-			// case STB_WEAK:
-			// 	if (symbol->st_shndx == SHN_UNDEF) {
-			// 		symbol_type_char = 'w';
-			// 	} else {
-			// 		symbol_type_char = 'W';
-			// 	}
-			// 	break;
-
-			// case STB_GNU_UNIQUE:
-			// 	symbol_type_char = 'u';
-			// 	break;
-
-			// default:
-			// 	break;
-			// }
-
-			symbols[sym_i].offset = 0; // TODO
 			symbols[sym_i].name = symbol_name;
-			symbols[sym_i].type_char = _elf64_symbol_type_char(symbol, shdr);
+			symbols[sym_i].type_char = type_char;
+
+			switch (symbols[sym_i].type_char) {
+			case 'a':
+			case 'A':
+			case 'b':
+			case 'B':
+			case 'd':
+			case 'D':
+			case 'r':
+			case 'R':
+			case 't':
+			case 'T':
+			case 'W':
+				symbols[sym_i].has_address = 1;
+				symbols[sym_i].offset = symbol->st_value;
+				break;
+			default:
+				symbols[sym_i].has_address = 0; // TODO
+				break;
+			}
 
 			sym_i += 1;
 		}
@@ -314,12 +301,32 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 	// TODO implement ft_qsort
 	qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
 
+	char offbuf[16 + 1];
+	struct symbol *symbol;
+
 	for (size_t i = 0; i < sym_i; i += 1) {
-		write(STDOUT_FILENO, "                ", 16); // TODO
+		symbol = &symbols[i];
+
+		if (i != 0) {
+			struct symbol *prev = &symbols[i - 1];
+			char const *version_delim = ft_strchr(symbol->name, '@');
+
+			if ((version_delim != NULL && ft_strncmp(prev->name, symbol->name, (size_t)(version_delim - symbol->name)) == 0) || strcmp(prev->name, symbol->name) == 0) {
+				continue;
+			}
+		}
+
+		if (symbol->has_address) {
+			snprintf(offbuf, sizeof(offbuf), "%016lx", symbol->offset);
+		} else {
+			memset(offbuf, ' ', sizeof(offbuf) - 1);
+		}
+
+		write(STDOUT_FILENO, offbuf, sizeof(offbuf) - 1);
 		write(STDOUT_FILENO, " ", 1);
-		write(STDOUT_FILENO, &symbols[i].type_char, 1);
+		write(STDOUT_FILENO, &symbol->type_char, 1);
 		write(STDOUT_FILENO, " ", 1);
-		write(STDOUT_FILENO, symbols[i].name, ft_strlen(symbols[i].name));
+		write(STDOUT_FILENO, symbol->name, ft_strlen(symbol->name));
 		write(STDOUT_FILENO, "\n", 1);
 	}
 
