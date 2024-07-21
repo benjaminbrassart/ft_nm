@@ -149,7 +149,7 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		if (st_bind == STB_GLOBAL) {
 			sym_char = 'R';
 		} else {
-		sym_char = 'D';
+			sym_char = 'D';
 		}
 	} else {
 		sym_char = '?';
@@ -168,6 +168,16 @@ static int _compare_symbol(void const *p1, void const *p2)
 	struct symbol const *sym2 = p2;
 	char const *s1 = sym1->name;
 	char const *s2 = sym2->name;
+
+	if (s1 == s2) {
+		return 0;
+	}
+
+	if (s1 == NULL) {
+		return 1;
+	} else if (s2 == NULL) {
+		return -1;
+	}
 
 	while (1) {
 		while (*s1 == '_') {
@@ -193,6 +203,39 @@ static int _compare_symbol(void const *p1, void const *p2)
 	}
 
 	return ft_toupper(*s1) - ft_toupper(*s2);
+}
+
+static void _remove_duplicate_and_unversioned_symbols(struct symbol *symbols, size_t n)
+{
+	for (size_t i = 0; i < n; i += 1) {
+		if (symbols[i].name == NULL) {
+			continue;
+		}
+
+		for (size_t j = 0; j < i; j += 1) {
+			if (symbols[j].name != NULL && strcmp(symbols[i].name, symbols[j].name) == 0) {
+				symbols[j].name = NULL;
+			}
+		}
+
+		char const *at = ft_strchr(symbols[i].name, '@');
+
+		if (at == NULL) {
+			continue;
+		}
+
+		size_t label_length = (size_t)(at - symbols[i].name);
+
+		for (size_t j = 0; j < n; j += 1) {
+			if (i == j || symbols[j].name == NULL) {
+				continue;
+			}
+
+			if (ft_strncmp(symbols[i].name, symbols[j].name, label_length) == 0 && symbols[j].name[label_length] == '\0') {
+				symbols[j].name = NULL;
+			}
+		}
+	}
 }
 
 static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
@@ -308,14 +351,21 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		ft_qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
 	}
 
+	_remove_duplicate_and_unversioned_symbols(symbols, sym_i);
+
 	char offbuf[16 + 1];
 	struct symbol *symbol;
 
 	for (size_t i = 0; i < sym_i; i += 1) {
 		symbol = &symbols[i];
 
-		if (i != 0) {
+		if (symbol->name == NULL) {
+			continue;
+		}
+
+		if (i != 0 && symbols[i - 1].name != NULL) {
 			struct symbol *prev = &symbols[i - 1];
+
 			char const *version_delim = ft_strchr(symbol->name, '@');
 
 			if ((version_delim != NULL && ft_strncmp(prev->name, symbol->name, (size_t)(version_delim - symbol->name)) == 0) || strcmp(prev->name, symbol->name) == 0) {
