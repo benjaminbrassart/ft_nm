@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/30 10:39:06 by benjamin          #+#    #+#             */
-/*   Updated: 2024/07/21 19:35:30 by bbrassar         ###   ########.fr       */
+/*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
+/*   Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ char const COPYRIGHT_NOTICE[] =
 	"\n"
 	"Report bugs and issues at https://github.com/bemjaminbrassart/ft_nm\n";
 
-static int ft_nm(char const *files[], int n);
+static int ft_nm(struct config const *config, char const *files[], int n);
 
 int main(int argc, char const *argv[])
 {
@@ -77,11 +77,12 @@ int main(int argc, char const *argv[])
 		argc += 1;
 	}
 
-	return ft_nm(&argv[1], argc - 1);
+	return ft_nm(&config, &argv[1], argc - 1);
 }
 
-static int ft_nm_elf32(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *file)
+static int ft_nm_elf32(struct config const *config, struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *file)
 {
+	(void)config;
 	(void)mm;
 	(void)ehdr;
 	(void)file;
@@ -189,7 +190,7 @@ static int _compare_symbol(void const *p1, void const *p2)
 	return ft_toupper(*s1) - ft_toupper(*s2);
 }
 
-static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
+static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
 {
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
 
@@ -298,8 +299,10 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 		}
 	}
 
-	// TODO implement ft_qsort
-	qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
+	if (!config->no_sort) {
+		// TODO implement ft_qsort
+		qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
+	}
 
 	char offbuf[16 + 1];
 	struct symbol *symbol;
@@ -338,11 +341,11 @@ static int ft_nm_elf64(struct memory_map *mm, Elf64_Ehdr const *ehdr, char const
 	return EXIT_SUCCESS;
 }
 
-static int ft_nm_elf(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *file)
+static int ft_nm_elf(struct config const *config, struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *file)
 {
 	switch (ehdr->e_ident[EI_CLASS]) {
 	case ELFCLASS32:
-		return ft_nm_elf32(mm, ehdr, file);
+		return ft_nm_elf32(config, mm, ehdr, file);
 
 	case ELFCLASS64: {
 		Elf64_Ehdr const *ehdr64;
@@ -352,7 +355,7 @@ static int ft_nm_elf(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *
 			return EXIT_FAILURE;
 		}
 
-		return ft_nm_elf64(mm, ehdr64, file);
+		return ft_nm_elf64(config, mm, ehdr64, file);
 	}
 
 	default:
@@ -360,7 +363,7 @@ static int ft_nm_elf(struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *
 	}
 }
 
-static int ft_nm_map(void const *map, size_t map_size, char const *file)
+static int ft_nm_map(struct config const *config, void const *map, size_t map_size, char const *file)
 {
 	(void)file;
 
@@ -377,13 +380,13 @@ static int ft_nm_map(void const *map, size_t map_size, char const *file)
 	}
 
 	if (ft_memcmp(&ehdr->e_ident[EI_MAG0], ELFMAG, SELFMAG) == 0) {
-		return ft_nm_elf(&root_map, ehdr, file);
+		return ft_nm_elf(config, &root_map, ehdr, file);
 	} else {
 		return EXIT_FAILURE;
 	}
 }
 
-static int ft_nm_file(char const *file)
+static int ft_nm_file(struct config const *config, char const *file)
 {
 	int result = EXIT_FAILURE;
 
@@ -451,7 +454,7 @@ static int ft_nm_file(char const *file)
 		close(fd);
 		fd = -1;
 
-		result = ft_nm_map(map, map_size, file);
+		result = ft_nm_map(config, map, map_size, file);
 	} while (false);
 
 	if (map != MAP_FAILED) {
@@ -472,14 +475,14 @@ static int ft_nm_file(char const *file)
 	return result;
 }
 
-static int ft_nm(char const *files[], int n)
+static int ft_nm(struct config const *config, char const *files[], int n)
 {
 	int result;
 	int tmp;
 
 	result = EXIT_SUCCESS;
 	for (int i = 0; i < n; i += 1) {
-		tmp = ft_nm_file(files[i]);
+		tmp = ft_nm_file(config, files[i]);
 		if (tmp > result) {
 			result = tmp;
 		}

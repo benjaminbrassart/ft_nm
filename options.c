@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/30 11:00:24 by benjamin          #+#    #+#             */
-/*   Updated: 2024/07/21 19:45:50 by bbrassar         ###   ########.fr       */
+/*   Created: 2024/06/30 11:00:24 by bbrassar          #+#    #+#             */
+/*   Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ static struct option const OPTIONS[] = {
 		.early_exit = false,
 	},
 	{
+		.name = OptionNoSort,
 		.opt_short = 'p',
 		.opt_long = "no-sort",
 		.value_policy = OptionValueDenied,
