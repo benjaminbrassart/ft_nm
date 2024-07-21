@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/21 22:20:50 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/21 22:28:46 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "options.h"
 #include "version.h"
 
+#include "ft_ext.h"
 #include "libft/ft.h"
 
 #include <elf.h>
@@ -295,7 +296,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 				symbols[sym_i].offset = symbol->st_value;
 				break;
 			default:
-				symbols[sym_i].has_address = 0; // TODO
+				symbols[sym_i].has_address = 0;
 				break;
 			}
 
@@ -304,8 +305,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	}
 
 	if (!config->no_sort) {
-		// TODO implement ft_qsort
-		qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
+		ft_qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
 	}
 
 	char offbuf[16 + 1];

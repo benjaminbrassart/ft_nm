@@ -6,7 +6,7 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/07/21 22:27:17 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ DIR_LIBFT := ./libft
 NAME_LIBFT := libft.a
 DIR_OBJ := .
 
-SRC := main.c options.c config.c version.c memory_map.c
+SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c
 OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 DEP := $(OBJ:.o=.d)
 
