@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 11:00:24 by benjamin          #+#    #+#             */
-/*   Updated: 2024/07/21 05:18:36 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/21 19:45:50 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,7 +310,7 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 				write(STDERR_FILENO, argv[i], ft_strlen(argv[i]));
 				write(STDERR_FILENO, "'\n", 2);
 				_display_help(STDERR_FILENO);
-				return EXIT_FAILURE;
+				return ParseConfigFailure;
 			}
 
 			switch (opt->value_policy) {
@@ -324,7 +324,7 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 					write(STDERR_FILENO, argv[i], ft_strlen(opt->opt_long) + 2);
 					write(STDERR_FILENO, "' requires an argument\n", 23);
 					_display_help(STDERR_FILENO);
-					return EXIT_FAILURE;
+					return ParseConfigFailure;
 				}
 
 				break;
@@ -342,17 +342,17 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 					write(STDERR_FILENO, argv[i], ft_strlen(opt->opt_long) + 2);
 					write(STDERR_FILENO, "' doesn't allow an argument\n", 28);
 					_display_help(STDERR_FILENO);
-					return EXIT_FAILURE;
+					return ParseConfigFailure;
 				}
 				break;
 			}
 
 			if (_handle_option(opt->name, opt_val, config) != EXIT_SUCCESS) {
-				return EXIT_FAILURE;
+				return ParseConfigFailure;
 			}
 
 			if (opt->early_exit) {
-				return EXIT_SUCCESS;
+				return ParseConfigEarlyExit;
 			}
 		} else {
 			for (int j = 1; argv[i][j] != '\0'; j += 1) {
@@ -362,20 +362,20 @@ enum parse_config_result parse_options(int *argc, char const *argv[], struct con
 					write(STDERR_FILENO, &argv[i][j], 1);
 					write(STDERR_FILENO, "'\n", 2);
 					_display_help(STDERR_FILENO);
-					return EXIT_FAILURE;
+					return ParseConfigFailure;
 				}
 
 				if (_handle_option(opt->name, NULL, config) != EXIT_SUCCESS) {
-					return EXIT_FAILURE;
+					return ParseConfigFailure;
 				}
 
 				if (opt->early_exit) {
-					return EXIT_SUCCESS;
+					return ParseConfigEarlyExit;
 				}
 			}
 		}
 		_shift(i, argc, argv);
 	}
 
-	return EXIT_SUCCESS;
+	return ParseConfigSuccess;
 }
