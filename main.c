@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 00:49:24 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 00:52:51 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,7 +371,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 			symbol = &symbols[sym_i - i - 1];
 		} else {
 			symbol = &symbols[i];
-}
+		}
 
 		if (symbol->name == NULL) {
 			continue;
@@ -478,6 +478,7 @@ static int ft_nm_file(struct config const *config, char const *file)
 			write(STDERR_FILENO, ": ", 2);
 			write(STDERR_FILENO, err_msg, ft_strlen(err_msg));
 			write(STDERR_FILENO, "\n", 1);
+
 			break;
 		}
 
@@ -545,14 +546,18 @@ static int ft_nm_file(struct config const *config, char const *file)
 
 static int ft_nm(struct config *config, char const *files[], int n)
 {
+	/**
+	 * yes, this is the behaviour of GNU nm.
+	 * yes, the program exits with 0 if there is 256 errors.
+	 * yes, it is dumb as a box of rocks.
+	 * yes, i laughed very hard when i found this.
+	 */
 	int result;
-	int tmp;
 
-	result = EXIT_SUCCESS;
+	result = 0;
 	for (int i = 0; i < n; i += 1) {
-		tmp = ft_nm_file(config, files[i]);
-		if (tmp > result) {
-			result = tmp;
+		if (ft_nm_file(config, files[i]) != EXIT_SUCCESS) {
+			result += 1;
 		}
 	}
 	return result;

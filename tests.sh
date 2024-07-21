@@ -8,23 +8,24 @@ status=0
 
 test_nm() {
     test_count=$((test_count + 1))
+    args="$(echo "$@" | xargs)"
 
     printf -- '\n============ TEST %d ============\n\n' "${test_count}"
-    printf -- '  ARGS: %s\n\n' "$(echo "$@" | xargs)"
+    printf -- '  ARGS: %s\n\n' "${args}"
+
+    echo "${args}" > "logs/${test_count}.command.log"
 
     nm "$@" \
         > "logs/${test_count}.stdout.nm.log" \
         2> "logs/${test_count}.stderr.nm.log"
     exit_nm="$?"
+    echo "${exit_nm}" > "logs/${test_count}.exit.nm.log"
 
     ./ft_nm "$@" \
         > "logs/${test_count}.stdout.ft.log" \
         2> "logs/${test_count}.stderr.ft.log"
     exit_ft="$?"
-
-    if [ "${exit_nm}" != "${exit_ft}" ]; then
-        status="1"
-    fi
+    echo "${exit_ft}" > "logs/${test_count}.exit.ft.log"
 
     git --no-pager diff --no-index --word-diff=color --word-diff-regex=. \
         "logs/${test_count}.stdout.ft.log" \
@@ -37,8 +38,11 @@ test_nm() {
     current_status="$?"
 
     if [ "${current_status}" -ne "0" ]; then
-        status="${current_status}"
-        printf -- "\n  KO\n"
+        status="1"
+        printf -- "\n  KO: check diff\n"
+    elif [ "${exit_nm}" -ne "${exit_ft}" ]; then
+        status="1"
+        printf -- "\n  KO: exit status (nm=%d, ft=%d)\n" "${exit_nm}" "${exit_ft}"
     else
         printf -- "  OK\n"
     fi
@@ -77,5 +81,8 @@ test_nm -a -- does_not_exist
 test_nm -a -- does_not_exist a.out
 test_nm -a -- does_not_exist ft_nm
 test_nm -a -- ft_nm ft_nm
+
+test_nm $(seq 255)
+test_nm $(seq 256)
 
 exit "${status}"
