@@ -6,8 +6,8 @@
 |-----------|-----------------------------------------------------------|
 | `A`       | Absolute symbol                                           |
 | `a`       | File name                                                 |
-| `B`       | In .bss data section (global)                             |
-| `b`       | In .bss data section (local)                              |
+| `B`       | In `.bss` data section (global)                           |
+| `b`       | In `.bss` data section (local)                            |
 | `C`       | TODO                                                      |
 | `c`       | TODO                                                      |
 | `D`       | In `.data` (or similar) initialized data section (global) |
