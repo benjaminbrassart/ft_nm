@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 00:52:51 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 01:22:35 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -375,16 +375,6 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 
 		if (symbol->name == NULL) {
 			continue;
-		}
-
-		if (i != 0 && symbols[i - 1].name != NULL) {
-			struct symbol *prev = &symbols[i - 1];
-
-			char const *version_delim = ft_strchr(symbol->name, '@');
-
-			if ((version_delim != NULL && ft_strncmp(prev->name, symbol->name, (size_t)(version_delim - symbol->name)) == 0) || strcmp(prev->name, symbol->name) == 0) {
-				continue;
-			}
 		}
 
 		if (symbol->has_address) {
