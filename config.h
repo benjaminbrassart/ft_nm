@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 12:18:51 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 00:12:21 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@ struct config {
 	unsigned undefined_only  : 1;
 	/** -V, --version */
 	unsigned display_version : 1;
+	/** */
+	unsigned print_file_name : 1;
 	/** --unicode */
 	enum unicode_display unicode_display;
 };

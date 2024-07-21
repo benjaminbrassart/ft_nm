@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 00:17:29 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 00:17:51 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ char const COPYRIGHT_NOTICE[] =
 	"\n"
 	"Report bugs and issues at https://github.com/bemjaminbrassart/ft_nm\n";
 
-static int ft_nm(struct config const *config, char const *files[], int n);
+static int ft_nm(struct config *config, char const *files[], int n);
 
 int main(int argc, char const *argv[])
 {
@@ -76,6 +76,10 @@ int main(int argc, char const *argv[])
 	if (argc == 1) {
 		argv[1] = "a.out";
 		argc += 1;
+	}
+
+	if (argc > 2) {
+		config.print_file_name = 1;
 	}
 
 	return ft_nm(&config, &argv[1], argc - 1);
@@ -356,6 +360,12 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	char offbuf[16 + 1];
 	struct symbol *symbol;
 
+	if (config->print_file_name) {
+		write(STDOUT_FILENO, "\n", 1);
+		write(STDOUT_FILENO, file, ft_strlen(file));
+		write(STDOUT_FILENO, ":\n", 2);
+	}
+
 	for (size_t i = 0; i < sym_i; i += 1) {
 		symbol = &symbols[(!config->no_sort && config->reverse_sort) ? sym_i - i - 1 : i];
 
@@ -529,7 +539,7 @@ static int ft_nm_file(struct config const *config, char const *file)
 	return result;
 }
 
-static int ft_nm(struct config const *config, char const *files[], int n)
+static int ft_nm(struct config *config, char const *files[], int n)
 {
 	int result;
 	int tmp;

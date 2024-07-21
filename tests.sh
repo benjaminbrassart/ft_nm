@@ -12,16 +12,35 @@ test_nm() {
     printf -- '\n============ TEST %d ============\n\n' "${test_count}"
     printf -- '  ARGS: %s\n\n' "$(echo "$@" | xargs)"
 
-    nm "$@" > "logs/${test_count}.stdout.nm.log" 2> "logs/${test_count}.stderr.nm.log"
-    ./ft_nm "$@" > "logs/${test_count}.stdout.ft.log" 2> "logs/${test_count}.stderr.ft.log"
+    nm "$@" \
+        > "logs/${test_count}.stdout.nm.log" \
+        2> "logs/${test_count}.stderr.nm.log"
+    exit_nm="$?"
 
-    git --no-pager diff --no-index --word-diff=color --word-diff-regex=. "logs/${test_count}.stdout.ft.log" "logs/${test_count}.stdout.nm.log"
-    git --no-pager diff --no-index --word-diff --word-diff-regex=. "logs/${test_count}.stdout.ft.log" "logs/${test_count}.stdout.nm.log" > "logs/${test_count}.diff"
+    ./ft_nm "$@" \
+        > "logs/${test_count}.stdout.ft.log" \
+        2> "logs/${test_count}.stderr.ft.log"
+    exit_ft="$?"
+
+    if [ "${exit_nm}" != "${exit_ft}" ]; then
+        status="1"
+    fi
+
+    git --no-pager diff --no-index --word-diff=color --word-diff-regex=. \
+        "logs/${test_count}.stdout.ft.log" \
+        "logs/${test_count}.stdout.nm.log"
+    git --no-pager diff --no-index --word-diff --word-diff-regex=. \
+        "logs/${test_count}.stdout.ft.log" \
+        "logs/${test_count}.stdout.nm.log" \
+        > "logs/${test_count}.diff"
 
     current_status="$?"
 
     if [ "${current_status}" -ne "0" ]; then
         status="${current_status}"
+        printf -- "\n  KO\n"
+    else
+        printf -- "  OK\n"
     fi
 
     printf -- '\n=================================\n\n'
@@ -41,6 +60,22 @@ test_nm -a a.out
 test_nm -a --
 test_nm -a -- a.out
 
-test_nm -r
+test_nm -r --
+test_nm -r -- a.out
+
+test_nm -p --
+test_nm -p -- a.out
+
+test_nm -rp --
+test_nm -rp -- a.out
+
+test_nm -rpa -- ft_nm
+
+test_nm -a --
+test_nm -a -- ft_nm
+test_nm -a -- does_not_exist
+test_nm -a -- does_not_exist a.out
+test_nm -a -- does_not_exist ft_nm
+test_nm -a -- ft_nm ft_nm
 
 exit "${status}"
