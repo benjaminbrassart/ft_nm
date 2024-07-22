@@ -30,7 +30,7 @@ test_nm() {
     git --no-pager diff --no-index --word-diff=color --word-diff-regex=. \
         "logs/${test_count}.stdout.ft.log" \
         "logs/${test_count}.stdout.nm.log"
-    git --no-pager diff --no-index --word-diff --word-diff-regex=. \
+    git --no-pager diff --no-index \
         "logs/${test_count}.stdout.ft.log" \
         "logs/${test_count}.stdout.nm.log" \
         > "logs/${test_count}.diff"
