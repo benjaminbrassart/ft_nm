@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 05:32:56 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 01:27:59 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -267,6 +266,18 @@ static void _remove_duplicate_and_unversioned_symbols(struct symbol *symbols, si
 	}
 }
 
+static void _fill_offbuf(char buf[], size_t n, uint64_t value)
+{
+	static char const base[16] = "0123456789abcdef";
+
+	ft_memset(buf, '0', n);
+	while (n > 0 && value > 0) {
+		buf[n - 1] = base[value % sizeof(base)];
+		value /= sizeof(base);
+		n -= 1;
+	}
+}
+
 static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
 {
 	bool extern_only = false;
@@ -435,7 +446,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 
 	_remove_duplicate_and_unversioned_symbols(symbols, sym_i);
 
-	char offbuf[16 + 1];
+	char offbuf[16];
 	struct symbol *symbol;
 
 	if (config->print_file_name) {
@@ -458,12 +469,12 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		}
 
 		if (symbol->has_address) {
-			snprintf(offbuf, sizeof(offbuf), "%016lx", symbol->offset);
+			_fill_offbuf(offbuf, sizeof(offbuf), symbol->offset);
 		} else {
-			memset(offbuf, ' ', sizeof(offbuf) - 1);
+			ft_memset(offbuf, ' ', sizeof(offbuf));
 		}
 
-		write(STDOUT_FILENO, offbuf, sizeof(offbuf) - 1);
+		write(STDOUT_FILENO, offbuf, sizeof(offbuf));
 		write(STDOUT_FILENO, " ", 1);
 		write(STDOUT_FILENO, &symbol->type_char, 1);
 		write(STDOUT_FILENO, " ", 1);
