@@ -85,4 +85,27 @@ test_nm -a -- ft_nm ft_nm
 test_nm $(seq 255)
 test_nm $(seq 256)
 
+test_nm -- ft_nm
+test_nm -- ft_nm ft_nm
+
+test_nm -u -- ft_nm
+test_nm -u -- ft_nm ft_nm
+
+test_nm -g -- ft_nm
+test_nm -g -- ft_nm ft_nm
+
+test_nm -gu -- ft_nm
+test_nm -gu -- ft_nm ft_nm
+
+test_nm -ug -- ft_nm
+test_nm -ug -- ft_nm ft_nm
+
+test_nm -ug -u -- ft_nm
+test_nm -ug -u -- ft_nm ft_nm
+
+test_nm -agurp -- ft_nm ft_nm
+
+test_nm -a -- *.o
+test_nm -a -- libnm.so
+
 exit "${status}"

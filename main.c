@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 02:23:25 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 05:25:05 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,32 @@ static int ft_nm_elf32(struct config const *config, struct memory_map *mm, Elf32
 	return EXIT_SUCCESS;
 }
 
+static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name)
+{
+	Elf64_Word const sh_type = section->sh_type;
+	Elf64_Xword const sh_flags = section->sh_flags;
+
+	char sym_char = '?';
+
+	if (sh_type == SHT_PROGBITS) {
+		if (ft_strncmp(name, ".debug_", 7) == 0) {
+			sym_char = 'N';
+		} else if ((sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR) {
+			sym_char = 't';
+		} else if ((sh_flags & SHF_WRITE) == SHF_WRITE) {
+			sym_char = 'd';
+		} else {
+			sym_char = 'r';
+		}
+	} else if (sh_type == SHT_NOBITS) {
+		sym_char = 'b';
+	} else {
+		sym_char = '?';
+	}
+
+	return sym_char;
+}
+
 static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr)
 {
 	Elf64_Section const st_shndx = symbol->st_shndx;
@@ -110,10 +136,7 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		return 'C';
 	}
 
-	Elf64_Shdr const *section;
-
-	section = &shdr[st_shndx];
-
+	Elf64_Shdr const *section = &shdr[st_shndx];
 	Elf64_Word const sh_type = section->sh_type;
 	Elf64_Xword const sh_flags = section->sh_flags;
 
@@ -150,11 +173,13 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 	} else if (st_type == STT_FUNC) {
 		sym_char = 'T';
 	} else if (st_type == STT_OBJECT) {
-		if (st_bind == STB_GLOBAL) {
+		if (st_bind == STB_GLOBAL || (sh_flags & SHF_WRITE) == 0) {
 			sym_char = 'R';
 		} else {
-			sym_char = 'D';
+			sym_char = 'd';
 		}
+	} else if (st_type == STT_SECTION) {
+		sym_char = '?';
 	} else {
 		sym_char = '?';
 	}
@@ -184,11 +209,11 @@ static int _compare_symbol(void const *p1, void const *p2)
 	}
 
 	while (1) {
-		while (*s1 == '_') {
+		while (*s1 == '_' || *s1 == '.') {
 			s1 += 1;
 		}
 
-		while (*s2 == '_') {
+		while (*s2 == '_' || *s2 == '.') {
 			s2 += 1;
 		}
 
@@ -276,14 +301,12 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		Elf64_Shdr const *section = &shdr[i];
 		char const *section_name = &section_header_string_table[section->sh_name];
 
-		if (section->sh_type != SHT_STRTAB) {
-			continue;
-		}
-
-		if (ft_strcmp(section_name, ".strtab") == 0) {
-			symbol_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
-		} else if (ft_strcmp(section_name, ".dynstr") == 0) {
-			dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
+		if (section->sh_type == SHT_STRTAB) {
+			if (ft_strcmp(section_name, ".strtab") == 0) {
+				symbol_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
+			} else if (ft_strcmp(section_name, ".dynstr") == 0) {
+				dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
+			}
 		}
 	}
 
@@ -336,9 +359,18 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 
 		for (Elf64_Xword j = 0; j < sym_count; j += 1) {
 			Elf64_Sym const *symbol = &symbol_table[j];
-			char const *symbol_name = &string_table[symbol->st_name];
+			char const *symbol_name;
+			char type_char;
 
-			char type_char = _elf64_symbol_type_char(symbol, shdr);
+			if (ELF64_ST_TYPE(symbol->st_info) == STT_SECTION) {
+				Elf64_Shdr const *section_symbol = &shdr[symbol->st_shndx];
+
+				symbol_name = &string_table[section_symbol->sh_name];
+				type_char = _elf64_section_type_char(section_symbol, symbol_name);
+			} else {
+				symbol_name = &string_table[symbol->st_name];
+				type_char = _elf64_symbol_type_char(symbol, shdr);
+			}
 
 			if (type_char != 'a' && symbol_name[0] == '\0') {
 				continue;
@@ -378,6 +410,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 			case 'B':
 			case 'd':
 			case 'D':
+			case 'N':
 			case 'r':
 			case 'R':
 			case 't':
