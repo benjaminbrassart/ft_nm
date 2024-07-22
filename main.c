@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 05:25:05 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 05:32:04 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -444,6 +444,8 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		write(STDOUT_FILENO, ":\n", 2);
 	}
 
+	size_t printed_symbols = 0;
+
 	for (size_t i = 0; i < sym_i; i += 1) {
 		if (!config->no_sort && config->reverse_sort) {
 			symbol = &symbols[sym_i - i - 1];
@@ -467,6 +469,14 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		write(STDOUT_FILENO, " ", 1);
 		write(STDOUT_FILENO, symbol->name, ft_strlen(symbol->name));
 		write(STDOUT_FILENO, "\n", 1);
+
+		printed_symbols += 1;
+	}
+
+	if (printed_symbols == 0) {
+		write(STDERR_FILENO, "ft_nm: ", 8);
+		write(STDERR_FILENO, file, ft_strlen(file));
+		write(STDERR_FILENO, ": no symbols\n", 13);
 	}
 
 	free(symbols);
