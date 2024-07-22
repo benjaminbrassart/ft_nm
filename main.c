@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 05:32:04 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 05:32:56 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,7 +295,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	char const *section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
 
 	char const *symbol_string_table = NULL;
-	char const *dynamic_string_table = NULL;
+	// char const *dynamic_string_table = NULL;
 
 	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
 		Elf64_Shdr const *section = &shdr[i];
@@ -304,8 +304,8 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		if (section->sh_type == SHT_STRTAB) {
 			if (ft_strcmp(section_name, ".strtab") == 0) {
 				symbol_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
-			} else if (ft_strcmp(section_name, ".dynstr") == 0) {
-				dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
+			// } else if (ft_strcmp(section_name, ".dynstr") == 0) {
+			// 	dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
 			}
 		}
 	}
@@ -342,9 +342,9 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		char const *string_table;
 
 		switch (section->sh_type) {
-		case SHT_DYNSYM:
-			string_table = dynamic_string_table;
-			break;
+		// case SHT_DYNSYM:
+		// 	string_table = dynamic_string_table;
+		// 	break;
 
 		case SHT_SYMTAB:
 			string_table = symbol_string_table;
