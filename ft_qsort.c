@@ -6,15 +6,18 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:28:20 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 01:20:48 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 02:07:45 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ext.h"
 
+#include <stdlib.h>
+
+#if 0
+
 struct array {
 	unsigned char *data;
-	size_t memb_count;
 	size_t memb_size;
 };
 
@@ -74,11 +77,23 @@ static void _sort(struct array *array, size_t start, size_t end, cmp_func_t *cmp
 
 void ft_qsort(void *base, size_t nmemb, size_t size, cmp_func_t *cmp)
 {
+	if (nmemb <= 1) {
+		return;
+	}
+
 	struct array array;
 
 	array.data = base;
-	array.memb_count = nmemb;
 	array.memb_size = size;
 
-	_sort(&array, 0, nmemb, cmp);
+	_sort(&array, 0, nmemb - 1, cmp);
 }
+
+#else
+
+void ft_qsort(void *base, size_t nmemb, size_t size, cmp_func_t *cmp)
+{
+	qsort(base, nmemb, size, cmp);
+}
+
+#endif
