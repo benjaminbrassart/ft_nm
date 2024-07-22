@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 01:29:22 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 01:30:32 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,10 +177,6 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		} else {
 			sym_char = 'd';
 		}
-	} else if (st_type == STT_SECTION) {
-		sym_char = '?';
-	} else {
-		sym_char = '?';
 	}
 
 	if (st_bind == STB_LOCAL) {
