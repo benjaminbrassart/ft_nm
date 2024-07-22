@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 01:22:35 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/22 02:23:25 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,6 +244,26 @@ static void _remove_duplicate_and_unversioned_symbols(struct symbol *symbols, si
 
 static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64_Ehdr const *ehdr, char const *file)
 {
+	bool extern_only = false;
+	bool undefined_only = false;
+	bool debug_symbols = false;
+
+	if (config->debug_symbols) {
+		debug_symbols = true;
+	}
+
+	if (config->extern_only) {
+		undefined_only = false;
+		extern_only = true;
+		debug_symbols = false;
+	}
+
+	if (config->undefined_only) {
+		undefined_only = true;
+		extern_only = false;
+		debug_symbols = false;
+	}
+
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
 
 	Elf64_Shdr const *section_string_table_shdr = &shdr[ehdr->e_shstrndx];
@@ -324,6 +344,30 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 				continue;
 			}
 
+			if (!debug_symbols && type_char == 'a') {
+				continue;
+			}
+
+			if (undefined_only && type_char != 'U' && type_char != 'w') {
+				continue;
+			}
+
+			if (extern_only) {
+				switch (type_char){
+				case 'B':
+				case 'D':
+				case 'R':
+				case 'T':
+				case 'U':
+				case 'w':
+				case 'W':
+					break;
+
+				default:
+					continue;
+				}
+			}
+
 			symbols[sym_i].name = symbol_name;
 			symbols[sym_i].type_char = type_char;
 
@@ -342,6 +386,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 				symbols[sym_i].has_address = 1;
 				symbols[sym_i].offset = symbol->st_value;
 				break;
+
 			default:
 				symbols[sym_i].has_address = 0;
 				break;
