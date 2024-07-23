@@ -12,6 +12,8 @@
 | `c`       | TODO                                                      |
 | `D`       | In `.data` (or similar) initialized data section (global) |
 | `d`       | In `.data` (or similar) initialized data section (local)  |
+| `N`       | Debug section                                             |
+| `n`       | Read-only + no-exec debug symbol                          |
 | `R`       | In `.rodata` (or similar) read-only data section (global) |
 | `r`       | In `.rodata` (or similar) read-only data section (local)  |
 | `T`       | In `.text` (or similar) executable code section (global)  |
@@ -26,13 +28,14 @@
 
 ## Links
 
-### Man pages
+### Documentation
 
 - https://man7.org/linux/man-pages/man1/nm.1.html
 - https://man7.org/linux/man-pages/man1/readelf.1.html
 - https://man7.org/linux/man-pages/man5/elf.5.html
 - https://man7.org/linux/man-pages/man2/mmap.2.html
 - https://man7.org/linux/man-pages/man2/fstat.2.html
+- https://docs.oracle.com/cd/E19683-01/816-1386/6m7qcoblj/index.html
 
 ### Stack Overflow answers
 
