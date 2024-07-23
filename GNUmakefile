@@ -6,7 +6,7 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/23 01:29:58 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/07/23 06:24:49 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,7 @@ OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 DEP := $(OBJ:.o=.d)
 
 CFLAGS := -Wall -Wextra -Wconversion -g3 -O0 -fPIC
-CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c99 -MMD -MP -D_GNU_SOURCE
+CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c11 -MMD -MP -D_GNU_SOURCE
 
 $(NAME): .EXTRA_PREREQS = $(DIR_LIBFT)/$(NAME_LIBFT)
 $(NAME): $(OBJ)

@@ -3,10 +3,13 @@ CompileFlags:
     - -Wall
     - -Wextra
     - -Wconversion
-    - -std=c99
+    - -std=c11
     - -I.
     - -Ilibft/include
     - -xc
+    - -D_POSIX_C_SOURCE=200809L
+    - -D_GNU_SOURCE
+    - -D__BYTE_ORDER__=__ORDER_LITTLE_ENDIAN__
 Diagnostics:
   UnusedIncludes: Strict
   MissingIncludes: Strict

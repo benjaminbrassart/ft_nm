@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 04:18:11 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 06:28:16 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "libft/ft.h"
 
 #include <elf.h>
+#include <endian.h>
 
 #include <errno.h>
 #include <stdbool.h>
@@ -30,6 +31,29 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+# define ELFDATA_CURRENT ELFDATA2LSB
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+# define ELFDATA_CURRENT ELFDATA2MSB
+#endif
+
+// TODO implement bswap
+#define GENERIC_SWAP(X) _Generic((X), \
+	uint8_t: X, \
+	int8_t: X, \
+	uint16_t: __bswap_16(X), \
+	int16_t: __bswap_16(X), \
+	uint32_t: __bswap_32(X), \
+	int32_t: __bswap_32(X), \
+	uint64_t: __bswap_64(X), \
+	int64_t: __bswap_64(X), \
+	default: ({}) \
+)
+#define FIX_BYTEORDER(ElfData, X) \
+	(((ElfData) == ELFDATA_CURRENT) \
+	? X \
+	: GENERIC_SWAP(X))
 
 struct symbol {
 	uint64_t offset;
@@ -93,10 +117,10 @@ static int ft_nm_elf32(struct config const *config, struct memory_map *mm, Elf32
 	return EXIT_SUCCESS;
 }
 
-static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name)
+static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name, unsigned char elfdata)
 {
-	Elf64_Word const sh_type = section->sh_type;
-	Elf64_Xword const sh_flags = section->sh_flags;
+	Elf64_Word const sh_type = FIX_BYTEORDER(elfdata, section->sh_type);
+	Elf64_Xword const sh_flags = FIX_BYTEORDER(elfdata, section->sh_flags);
 
 	char sym_char = '?';
 
@@ -117,9 +141,9 @@ static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name
 	return sym_char;
 }
 
-static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr)
+static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr, unsigned char elfdata)
 {
-	Elf64_Section const st_shndx = symbol->st_shndx;
+	Elf64_Section const st_shndx = FIX_BYTEORDER(elfdata, symbol->st_shndx);
 	unsigned char const st_bind = ELF64_ST_BIND(symbol->st_info);
 	unsigned char const st_type = ELF64_ST_TYPE(symbol->st_info);
 
@@ -136,8 +160,8 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 	}
 
 	Elf64_Shdr const *section = &shdr[st_shndx];
-	Elf64_Word const sh_type = section->sh_type;
-	Elf64_Xword const sh_flags = section->sh_flags;
+	Elf64_Word const sh_type = FIX_BYTEORDER(elfdata, section->sh_type);
+	Elf64_Xword const sh_flags = FIX_BYTEORDER(elfdata, section->sh_flags);
 
 	char sym_char = '?';
 
@@ -165,7 +189,7 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		} else {
 			sym_char = 'R';
 		}
-	} else if (sh_type == SHT_NOBITS && sh_flags == (SHF_ALLOC|SHF_WRITE)) {
+	} else if (sh_type == SHT_NOBITS && (sh_flags & (SHF_ALLOC|SHF_WRITE)) == (SHF_ALLOC|SHF_WRITE)) {
 		sym_char = 'B';
 	} else if (sh_type == SHT_PROGBITS && (sh_flags & (SHF_ALLOC|SHF_WRITE)) == (SHF_ALLOC|SHF_WRITE)) {
 		sym_char = 'D';
@@ -249,6 +273,8 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	bool undefined_only = false;
 	bool debug_symbols = false;
 
+	unsigned char elfdata = ehdr->e_ident[EI_DATA];
+
 	if (config->debug_symbols) {
 		debug_symbols = true;
 	}
@@ -265,7 +291,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		debug_symbols = false;
 	}
 
-	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
+	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + FIX_BYTEORDER(elfdata, ehdr->e_shoff));
 	Elf64_Shdr const *symtab_shdr = NULL;
 	Elf64_Shdr const *strtab_shdr = NULL;
 	char const *string_table = NULL;
@@ -277,16 +303,16 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	size_t sym_count = 0;
 	struct symbol *symbols = NULL;
 
-	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
-		if (shdr[i].sh_type != SHT_SYMTAB) {
+	for (Elf64_Half i = 0; i < FIX_BYTEORDER(elfdata, ehdr->e_shnum); i += 1) {
+		if (FIX_BYTEORDER(elfdata, shdr[i].sh_type) != SHT_SYMTAB) {
 			continue;
 		}
 
 		symtab_shdr = &shdr[i];
-		strtab_shdr = &shdr[symtab_shdr->sh_link];
-		sym_count = symtab_shdr->sh_size / symtab_shdr->sh_entsize;
-		string_table = (char const *)((unsigned char const *)mm->map + strtab_shdr->sh_offset);
-		string_table_length = strtab_shdr->sh_size;
+		strtab_shdr = &shdr[FIX_BYTEORDER(elfdata, symtab_shdr->sh_link)];
+		sym_count = FIX_BYTEORDER(elfdata, symtab_shdr->sh_size) / FIX_BYTEORDER(elfdata, symtab_shdr->sh_entsize);
+		string_table = (char const *)((unsigned char const *)mm->map + FIX_BYTEORDER(elfdata, strtab_shdr->sh_offset));
+		string_table_length = FIX_BYTEORDER(elfdata, strtab_shdr->sh_size);
 		break;
 	}
 
@@ -295,7 +321,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		return EXIT_FAILURE;
 	}
 
-	Elf64_Sym const *symbol_table = (Elf64_Sym const *)((unsigned char const *)mm->map + symtab_shdr->sh_offset);
+	Elf64_Sym const *symbol_table = (Elf64_Sym const *)((unsigned char const *)mm->map + FIX_BYTEORDER(elfdata, symtab_shdr->sh_offset));
 	size_t sym_i = 0;
 
 	for (Elf64_Xword j = 0; j < sym_count; j += 1) {
@@ -308,15 +334,15 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 				continue;
 			}
 
-			Elf64_Shdr const *section_symbol = &shdr[symbol->st_shndx];
-			Elf64_Shdr const *section_strtab = &shdr[ehdr->e_shstrndx];
-			char const *section_string_table = (char const *)((unsigned char const *)mm->map + section_strtab->sh_offset);
+			Elf64_Shdr const *section_symbol = &shdr[FIX_BYTEORDER(elfdata, symbol->st_shndx)];
+			Elf64_Shdr const *section_strtab = &shdr[FIX_BYTEORDER(elfdata, ehdr->e_shstrndx)];
+			char const *section_string_table = (char const *)((unsigned char const *)mm->map + FIX_BYTEORDER(elfdata, section_strtab->sh_offset));
 
-			symbol_name = &section_string_table[section_symbol->sh_name];
-			type_char = _elf64_section_type_char(section_symbol, symbol_name);
+			symbol_name = &section_string_table[FIX_BYTEORDER(elfdata, section_symbol->sh_name)];
+			type_char = _elf64_section_type_char(section_symbol, symbol_name, elfdata);
 		} else {
-			symbol_name = &string_table[symbol->st_name];
-			type_char = _elf64_symbol_type_char(symbol, shdr);
+			symbol_name = &string_table[FIX_BYTEORDER(elfdata, symbol->st_name)];
+			type_char = _elf64_symbol_type_char(symbol, shdr, elfdata);
 		}
 
 		if (type_char != 'a' && symbol_name[0] == '\0') {
@@ -363,9 +389,10 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		case 'R':
 		case 't':
 		case 'T':
+		case 'V':
 		case 'W':
 			symbols[sym_i].has_address = 1;
-			symbols[sym_i].offset = symbol->st_value;
+			symbols[sym_i].offset = FIX_BYTEORDER(elfdata, symbol->st_value);
 			break;
 
 		default:
