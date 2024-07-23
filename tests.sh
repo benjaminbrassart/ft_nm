@@ -113,4 +113,7 @@ test_nm -ga -- *.o
 test_nm -au -- *.o
 test_nm -a -- libnm.so
 
+test_nm -- test_files/*.o
+test_nm -a test_files/*.o
+
 exit "${status}"
