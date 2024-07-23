@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 06:32:34 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 23:06:09 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,11 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 			sym_char = 'd';
 		}
 	} else if (st_type == STT_NOTYPE && (sh_flags & (SHF_WRITE|SHF_EXECINSTR)) == 0) {
+		if (sh_type == SHT_PROGBITS) {
+			sym_char = 'r';
+		} else {
 		sym_char = 'n';
+		}
 	}
 
 	if (st_bind == STB_LOCAL) {
@@ -273,7 +277,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	bool undefined_only = false;
 	bool debug_symbols = false;
 
-	unsigned char elfdata = ehdr->e_ident[EI_DATA];
+	unsigned char const elfdata = ehdr->e_ident[EI_DATA];
 
 	if (config->debug_symbols) {
 		debug_symbols = true;
