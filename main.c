@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 06:28:16 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 06:32:34 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,17 +39,17 @@
 #endif
 
 // TODO implement bswap
-#define GENERIC_SWAP(X) _Generic((X), \
-	uint8_t: X, \
-	int8_t: X, \
-	uint16_t: __bswap_16(X), \
-	int16_t: __bswap_16(X), \
-	uint32_t: __bswap_32(X), \
-	int32_t: __bswap_32(X), \
-	uint64_t: __bswap_64(X), \
-	int64_t: __bswap_64(X), \
-	default: ({}) \
-)
+#define GENERIC_SWAP(X) (_Generic((X), \
+		uint8_t: X, \
+		int8_t: X, \
+		uint16_t: __bswap_16(X), \
+		int16_t: __bswap_16(X), \
+		uint32_t: __bswap_32(X), \
+		int32_t: __bswap_32(X), \
+		uint64_t: __bswap_64(X), \
+		int64_t: __bswap_64(X), \
+		default: ({}) \
+	))
 #define FIX_BYTEORDER(ElfData, X) \
 	(((ElfData) == ELFDATA_CURRENT) \
 	? X \

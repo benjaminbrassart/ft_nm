@@ -6,13 +6,11 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:28:20 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 04:01:05 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 05:06:04 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ext.h"
-
-#include <stdlib.h>
 
 struct array {
 	unsigned char *data;
