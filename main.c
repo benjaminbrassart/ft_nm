@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 02:02:56 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 03:49:12 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,6 +177,8 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		} else {
 			sym_char = 'd';
 		}
+	} else if (st_type == STT_NOTYPE && (sh_flags & (SHF_WRITE|SHF_EXECINSTR)) == 0) {
+		sym_char = 'n';
 	}
 
 	if (st_bind == STB_LOCAL) {
@@ -229,39 +231,6 @@ static int _compare_symbol(void const *p1, void const *p2)
 	return ft_toupper(*s1) - ft_toupper(*s2);
 }
 
-static void _remove_duplicate_and_unversioned_symbols(struct symbol *symbols, size_t n)
-{
-	for (size_t i = 0; i < n; i += 1) {
-		if (symbols[i].name == NULL) {
-			continue;
-		}
-
-		for (size_t j = 0; j < i; j += 1) {
-			if (symbols[j].name != NULL && strcmp(symbols[i].name, symbols[j].name) == 0) {
-				symbols[j].name = NULL;
-			}
-		}
-
-		char const *at = ft_strchr(symbols[i].name, '@');
-
-		if (at == NULL) {
-			continue;
-		}
-
-		size_t label_length = (size_t)(at - symbols[i].name);
-
-		for (size_t j = 0; j < n; j += 1) {
-			if (i == j || symbols[j].name == NULL) {
-				continue;
-			}
-
-			if (ft_strncmp(symbols[i].name, symbols[j].name, label_length) == 0 && symbols[j].name[label_length] == '\0') {
-				symbols[j].name = NULL;
-			}
-		}
-	}
-}
-
 static void _fill_offbuf(char buf[], size_t n, uint64_t value)
 {
 	static char const base[16] = "0123456789abcdef";
@@ -297,150 +266,115 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	}
 
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
+	Elf64_Shdr const *symtab_shdr = NULL;
+	Elf64_Shdr const *strtab_shdr = NULL;
+	char const *string_table = NULL;
+	size_t string_table_length = 0;
 
-	Elf64_Shdr const *section_string_table_shdr = &shdr[ehdr->e_shstrndx];
-		char const *section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
+	// TODO check string_table_length
+	(void)string_table_length;
 
-	char const *symbol_string_table = NULL;
-	// char const *dynamic_string_table = NULL;
-
-	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
-		Elf64_Shdr const *section = &shdr[i];
-		char const *section_name = &section_header_string_table[section->sh_name];
-
-		if (section->sh_type == SHT_STRTAB) {
-			if (ft_strcmp(section_name, ".strtab") == 0) {
-				symbol_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
-			// } else if (ft_strcmp(section_name, ".dynstr") == 0) {
-			// 	dynamic_string_table = (char const *)((unsigned char const *)mm->map + section->sh_offset);
-			}
-		}
-	}
-
-	size_t total_symbols = 0;
+	size_t sym_count = 0;
 	struct symbol *symbols = NULL;
 
 	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
-		Elf64_Shdr const *section = &shdr[i];
-
-		switch (section->sh_type) {
-		case SHT_DYNSYM:
-		case SHT_SYMTAB:
-			break;
-
-		default:
+		if (shdr[i].sh_type != SHT_SYMTAB) {
 			continue;
 		}
 
-		Elf64_Xword sym_count = section->sh_size / section->sh_entsize;
-
-		total_symbols += sym_count;
+		symtab_shdr = &shdr[i];
+		strtab_shdr = &shdr[symtab_shdr->sh_link];
+		sym_count = symtab_shdr->sh_size / symtab_shdr->sh_entsize;
+		string_table = (char const *)((unsigned char const *)mm->map + strtab_shdr->sh_offset);
+		string_table_length = strtab_shdr->sh_size;
+		break;
 	}
 
-	symbols = ft_calloc(total_symbols, sizeof(*symbols));
+	symbols = ft_calloc(sym_count, sizeof(*symbols));
 	if (symbols == NULL) {
 		return EXIT_FAILURE;
 	}
 
+	Elf64_Sym const *symbol_table = (Elf64_Sym const *)((unsigned char const *)mm->map + symtab_shdr->sh_offset);
 	size_t sym_i = 0;
 
-	for (Elf64_Half i = 0; i < ehdr->e_shnum; i += 1) {
-		Elf64_Shdr const *section = &shdr[i];
-		char const *string_table;
+	for (Elf64_Xword j = 0; j < sym_count; j += 1) {
+		Elf64_Sym const *symbol = &symbol_table[j];
+		char const *symbol_name;
+		char type_char;
 
-		switch (section->sh_type) {
-		// case SHT_DYNSYM:
-		// 	string_table = dynamic_string_table;
-		// 	break;
+		if (ELF64_ST_TYPE(symbol->st_info) == STT_SECTION) {
+			Elf64_Shdr const *section_symbol = &shdr[symbol->st_shndx];
+			Elf64_Shdr const *section_strtab = &shdr[ehdr->e_shstrndx];
+			char const *section_string_table = (char const *)((unsigned char const *)mm->map + section_strtab->sh_offset);
 
-		case SHT_SYMTAB:
-			string_table = symbol_string_table;
-			break;
+			symbol_name = &section_string_table[section_symbol->sh_name];
+			type_char = _elf64_section_type_char(section_symbol, symbol_name);
+		} else {
+			symbol_name = &string_table[symbol->st_name];
+			type_char = _elf64_symbol_type_char(symbol, shdr);
+		}
 
-		default:
+		if (type_char != 'a' && symbol_name[0] == '\0') {
 			continue;
 		}
 
-		Elf64_Xword sym_count = section->sh_size / section->sh_entsize;
-		Elf64_Sym const *symbol_table = (Elf64_Sym const *)((unsigned char const *)mm->map + section->sh_offset);
+		if (!debug_symbols && type_char == 'a') {
+			continue;
+		}
 
-		for (Elf64_Xword j = 0; j < sym_count; j += 1) {
-			Elf64_Sym const *symbol = &symbol_table[j];
-			char const *symbol_name;
-			char type_char;
+		if (undefined_only && type_char != 'U' && type_char != 'w') {
+			continue;
+		}
 
-			if (ELF64_ST_TYPE(symbol->st_info) == STT_SECTION) {
-				Elf64_Shdr const *section_symbol = &shdr[symbol->st_shndx];
-
-				symbol_name = &string_table[section_symbol->sh_name];
-				type_char = _elf64_section_type_char(section_symbol, symbol_name);
-			} else {
-				symbol_name = &string_table[symbol->st_name];
-				type_char = _elf64_symbol_type_char(symbol, shdr);
-			}
-
-			if (type_char != 'a' && symbol_name[0] == '\0') {
-				continue;
-			}
-
-			if (!debug_symbols && type_char == 'a') {
-				continue;
-			}
-
-			if (undefined_only && type_char != 'U' && type_char != 'w') {
-				continue;
-			}
-
-			if (extern_only) {
-				switch (type_char){
-				case 'B':
-				case 'D':
-				case 'R':
-				case 'T':
-				case 'U':
-				case 'w':
-				case 'W':
-					break;
-
-				default:
-					continue;
-				}
-			}
-
-			symbols[sym_i].name = symbol_name;
-			symbols[sym_i].type_char = type_char;
-
-			switch (symbols[sym_i].type_char) {
-			case 'a':
-			case 'A':
-			case 'b':
+		if (extern_only) {
+			switch (type_char){
 			case 'B':
-			case 'd':
 			case 'D':
-			case 'N':
-			case 'r':
 			case 'R':
-			case 't':
 			case 'T':
+			case 'U':
+			case 'w':
 			case 'W':
-				symbols[sym_i].has_address = 1;
-				symbols[sym_i].offset = symbol->st_value;
 				break;
 
 			default:
-				symbols[sym_i].has_address = 0;
-				break;
+				continue;
 			}
-
-			sym_i += 1;
 		}
+
+		symbols[sym_i].name = symbol_name;
+		symbols[sym_i].type_char = type_char;
+
+		switch (symbols[sym_i].type_char) {
+		case 'a':
+		case 'A':
+		case 'b':
+		case 'B':
+		case 'd':
+		case 'D':
+		case 'n':
+		case 'N':
+		case 'r':
+		case 'R':
+		case 't':
+		case 'T':
+		case 'W':
+			symbols[sym_i].has_address = 1;
+			symbols[sym_i].offset = symbol->st_value;
+			break;
+
+		default:
+			symbols[sym_i].has_address = 0;
+			break;
+		}
+
+		sym_i += 1;
 	}
 
 	if (!config->no_sort) {
 		ft_qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
 	}
-
-	_remove_duplicate_and_unversioned_symbols(symbols, sym_i);
 
 	char offbuf[16];
 	struct symbol *symbol;
