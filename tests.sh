@@ -105,7 +105,12 @@ test_nm -ug -u -- ft_nm ft_nm
 
 test_nm -agurp -- ft_nm ft_nm
 
+test_nm -- *.o
 test_nm -a -- *.o
+test_nm -u -- *.o
+test_nm -g -- *.o
+test_nm -ga -- *.o
+test_nm -au -- *.o
 test_nm -a -- libnm.so
 
 exit "${status}"

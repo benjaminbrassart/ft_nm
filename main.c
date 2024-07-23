@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 03:49:12 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 04:18:11 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		}
 	} else if (st_shndx == SHN_COMMON) {
 		return 'C';
-	} else if (st_shndx >= SHN_LORESERVE && st_shndx <= SHN_HIRESERVE) {
+	} else if (st_shndx >= SHN_LORESERVE /* && st_shndx <= SHN_HIRESERVE */) {
 		return '?';
 	}
 
@@ -304,6 +304,10 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 		char type_char;
 
 		if (ELF64_ST_TYPE(symbol->st_info) == STT_SECTION) {
+			if (!debug_symbols) {
+				continue;
+			}
+
 			Elf64_Shdr const *section_symbol = &shdr[symbol->st_shndx];
 			Elf64_Shdr const *section_strtab = &shdr[ehdr->e_shstrndx];
 			char const *section_string_table = (char const *)((unsigned char const *)mm->map + section_strtab->sh_offset);
