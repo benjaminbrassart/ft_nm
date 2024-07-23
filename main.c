@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 01:30:32 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/23 02:02:56 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,7 +299,7 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 	Elf64_Shdr const *shdr = (Elf64_Shdr const *)((unsigned char const *)mm->map + ehdr->e_shoff);
 
 	Elf64_Shdr const *section_string_table_shdr = &shdr[ehdr->e_shstrndx];
-	char const *section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
+		char const *section_header_string_table = (char const *)((unsigned char const *)mm->map + section_string_table_shdr->sh_offset);
 
 	char const *symbol_string_table = NULL;
 	// char const *dynamic_string_table = NULL;
@@ -501,9 +501,8 @@ static int ft_nm_elf(struct config const *config, struct memory_map *mm, Elf32_E
 		return ft_nm_elf32(config, mm, ehdr, file);
 
 	case ELFCLASS64: {
-		Elf64_Ehdr const *ehdr64;
+		Elf64_Ehdr const *ehdr64 = mm_read(mm, 0, sizeof(*ehdr64));
 
-		ehdr64 = mm_read(mm, NULL, sizeof(*ehdr64));
 		if (ehdr64 == NULL) {
 			return EXIT_FAILURE;
 		}
@@ -525,9 +524,8 @@ static int ft_nm_map(struct config const *config, void const *map, size_t map_si
 		.map_size = map_size,
 	};
 
-	Elf32_Ehdr const *ehdr;
+	Elf32_Ehdr const *ehdr = mm_read(&root_map, 0, sizeof(*ehdr));
 
-	ehdr = mm_read(&root_map, NULL, sizeof(*ehdr));
 	if (ehdr == NULL) {
 		return EXIT_FAILURE;
 	}
