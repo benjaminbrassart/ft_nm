@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 21:26:50 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 23:56:21 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -348,7 +348,6 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 	(void)string_table_length;
 
 	Elf64_Xword sym_count = 0;
-	struct symbol *symbols = NULL;
 
 	Elf64_Half const e_shsum = ELF_GET(elfclass, elfdata, ehdr, e_shnum);
 
@@ -371,7 +370,18 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		sym_count = sh_size / sh_entsize;
 		string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, strtab_shdr, sh_offset)];
 		string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata, strtab_shdr, sh_size);
+
 		break;
+	}
+
+	struct symbol *symbols = NULL;
+
+	if (sym_count == 0) {
+		write(STDERR_FILENO, "ft_nm: ", 7);
+		write(STDERR_FILENO, file, ft_strlen(file));
+		write(STDERR_FILENO, ": no symbols\n", 13);
+
+		return EXIT_SUCCESS;
 	}
 
 	symbols = ft_calloc((size_t)sym_count, sizeof(*symbols));
@@ -476,14 +486,6 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 
 	struct symbol *symbol;
 
-	if (config->print_file_name) {
-		write(STDOUT_FILENO, "\n", 1);
-		write(STDOUT_FILENO, file, ft_strlen(file));
-		write(STDOUT_FILENO, ":\n", 2);
-	}
-
-	size_t printed_symbols = 0;
-
 	for (size_t i = 0; i < sym_i; i += 1) {
 		if (!config->no_sort && config->reverse_sort) {
 			symbol = &symbols[sym_i - i - 1];
@@ -507,22 +509,9 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		write(STDOUT_FILENO, " ", 1);
 		write(STDOUT_FILENO, symbol->name, ft_strlen(symbol->name));
 		write(STDOUT_FILENO, "\n", 1);
-
-		printed_symbols += 1;
 	}
 
-	if (printed_symbols == 0) {
-		write(STDERR_FILENO, "ft_nm: ", 8);
-		write(STDERR_FILENO, file, ft_strlen(file));
-		write(STDERR_FILENO, ": no symbols\n", 13);
-	}
-
-	free(offbuf);
 	free(symbols);
-
-	(void)mm;
-	(void)ehdr;
-	(void)file;
 	return EXIT_SUCCESS;
 }
 
@@ -543,8 +532,6 @@ static int ft_nm_elf(struct config const *config, struct memory_map *mm, Elf32_E
 
 static int ft_nm_map(struct config const *config, void const *map, size_t map_size, char const *file)
 {
-	(void)file;
-
 	struct memory_map root_map = {
 		.map = map,
 		.map_size = map_size,
@@ -552,13 +539,18 @@ static int ft_nm_map(struct config const *config, void const *map, size_t map_si
 
 	Elf32_Ehdr const *ehdr = mm_read(&root_map, 0, sizeof(*ehdr));
 
-	if (ehdr == NULL) {
-		return EXIT_FAILURE;
-	}
+	if (ehdr != NULL && ft_memcmp(&ehdr->e_ident[EI_MAG0], ELFMAG, SELFMAG) == 0) {
+		if (config->print_file_name) {
+			write(STDOUT_FILENO, "\n", 1);
+			write(STDOUT_FILENO, file, ft_strlen(file));
+			write(STDOUT_FILENO, ":\n", 2);
+		}
 
-	if (ft_memcmp(&ehdr->e_ident[EI_MAG0], ELFMAG, SELFMAG) == 0) {
 		return ft_nm_elf(config, &root_map, ehdr, file);
 	} else {
+		write(STDERR_FILENO, "ft_nm: ", 7);
+		write(STDERR_FILENO, file, ft_strlen(file));
+		write(STDERR_FILENO, ": file format not recognized\n", 29);
 		return EXIT_FAILURE;
 	}
 }
