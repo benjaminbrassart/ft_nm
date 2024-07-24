@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 11:09:38 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 21:22:52 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,7 +265,7 @@ static int _compare_symbol(void const *p1, void const *p2)
 	return ft_toupper(*s1) - ft_toupper(*s2);
 }
 
-static void _fill_offbuf(char buf[], size_t n, uint64_t value)
+static void _fill_valbuf(char buf[], size_t n, uint64_t value)
 {
 	static char const base[16] = "0123456789abcdef";
 
@@ -465,14 +465,11 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		ft_qsort(symbols, sym_i, sizeof(*symbols), _compare_symbol);
 	}
 
-	size_t sizeof_offbuf = ELF_MATCH(elfclass, 16, 8);
-	char *offbuf;
+	size_t sizeof_valbuf = ELF_MATCH(elfclass, 16, 8);
+	char valbuf[16];
+	char *valptr;
 
-	offbuf = malloc(sizeof(*offbuf) * sizeof_offbuf);
-	if (offbuf == NULL) {
-		free(symbols);
-		return EXIT_FAILURE;
-	}
+	valptr = &valbuf[16 - sizeof_valbuf];
 
 	struct symbol *symbol;
 
@@ -496,12 +493,12 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		}
 
 		if (symbol->has_value) {
-			_fill_offbuf(offbuf, sizeof_offbuf, symbol->value);
+			_fill_valbuf(valptr, sizeof_valbuf, symbol->value);
 		} else {
-			ft_memset(offbuf, ' ', sizeof_offbuf);
+			ft_memset(valptr, ' ', sizeof_valbuf);
 		}
 
-		write(STDOUT_FILENO, offbuf, sizeof_offbuf);
+		write(STDOUT_FILENO, valptr, sizeof_valbuf);
 		write(STDOUT_FILENO, " ", 1);
 		write(STDOUT_FILENO, &symbol->type_char, 1);
 		write(STDOUT_FILENO, " ", 1);
