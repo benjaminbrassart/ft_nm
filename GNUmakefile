@@ -6,7 +6,7 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/24 02:32:17 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/07/24 08:14:15 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,18 +21,20 @@ override SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c bswa
 override OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 override DEP := $(OBJ:.o=.d)
 
-override CFLAGS += -Wall -Wextra -Wconversion
-override CPPFLAGS += -I . -I $(DIR_LIBFT)/include -std=c11 -MMD -MP -D_GNU_SOURCE
+override _CFLAGS := -Wall -Wextra -Wconversion
+override _CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c11 -MMD -MP -D_GNU_SOURCE
+override _LDFLAGS := -L$(DIR_LIBFT)
+override _LDLIBS := -l:$(NAME_LIBFT)
 
 $(NAME): .EXTRA_PREREQS = $(DIR_LIBFT)/$(NAME_LIBFT)
 $(NAME): $(OBJ)
-	$(CC) $^ -o $@ -l:$(NAME_LIBFT) -L$(DIR_LIBFT)
+	$(CC) $^ -o $@ $(_LDFLAGS) $(LDFLAGS) $(_LDLIBS) $(LDLIBS)
 
 $(DIR_OBJ)/bswap.c.o: CFLAGS += -O2
 $(OBJ): .EXTRA_PREREQS = $(MAKEFILE)
 $(OBJ): $(DIR_OBJ)/%.c.o: %.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(_CFLAGS) $(CFLAGS) $(_CPPFLAGS) $(CPPFLAGS) -c $< -o $@
 
 version.c: version.c.in
 	@VERSION_MAJOR=1 VERSION_MINOR=0 VERSION_PATCH=0 \
