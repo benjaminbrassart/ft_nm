@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 23:56:21 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/25 01:02:49 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -435,6 +435,8 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 			case 'R':
 			case 'T':
 			case 'U':
+			case 'v':
+			case 'V':
 			case 'w':
 			case 'W':
 				break;
