@@ -346,7 +346,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 	char const *string_table = NULL;
 	Elf64_Word string_table_length = 0;
 
-	// TODO check string_table_length
+	// TODO check string table length + terminator
 	(void)string_table_length;
 
 	Elf64_Xword sym_count = 0;
