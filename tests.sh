@@ -86,6 +86,8 @@ test_nm() {
         "logs/${test_count}/stdout.nm.log" \
         > "logs/${test_count}/stdout.diff"
 
+status_stdout="$?"
+
     git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
         "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
         "logs/${test_count}/stderr.nm.log"
@@ -94,9 +96,9 @@ test_nm() {
         "logs/${test_count}/stderr.nm.log" \
         > "logs/${test_count}/stderr.diff"
 
-    current_status="$?"
+    status_stderr="$?"
 
-    if [ "${current_status}" -ne "0" ]; then
+    if [ "${status_stdout}" -ne "0" ] || [ "${status_stderr}" -ne "0" ]; then
         status="1"
         printf -- "\n  KO: check diff\n"
     elif [ "${exit_nm}" -ne "${exit_ft}" ]; then
@@ -175,6 +177,7 @@ test_nm -a -- libnm.so
 
 test_nm -- test_files/*.o
 test_nm -a test_files/*.o
+test_nm -a test_files/ft_nm-afl++
 
 test_nm /bin/ls
 test_nm /bin/*
