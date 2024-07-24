@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 10:03:33 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 10:55:13 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ MAKE_ELF_UNION(Ehdr);
 MAKE_ELF_UNION(Shdr);
 MAKE_ELF_UNION(Sym);
 
-char const COPYRIGHT_NOTICE[] =
+static char const COPYRIGHT_NOTICE[] =
 	"\n"
 	"\n"
 	"Copyright (C) 2024 Benjamin Brassart\n"
