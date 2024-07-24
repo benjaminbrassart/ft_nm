@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 21:22:52 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 21:26:50 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,14 @@
 	? (X) \
 	: (GENERIC_SWAP(X)))
 
+#define sizeof_field(Struct, Field) \
+	(sizeof(((Struct const *)NULL)->Field))
+
 #define ELF_MATCH(ElfClass, Case64, Case32) \
 	(((ElfClass) == ELFCLASS64) ? (Case64) : (Case32))
 
 #define ELF_SIZE(ElfClass, Type) \
-	ELF_MATCH((ElfClass), sizeof(Elf64_ ## Type), sizeof(Elf32_ ## Type))
+	ELF_MATCH((ElfClass), sizeof_field(Type, elf64), sizeof_field(Type, elf32))
 
 #define ELF_GET(ElfClass, ElfData, Object, Param) \
 	(ELF_MATCH((ElfClass), \
@@ -163,7 +166,7 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 
 	uint8_t const *raw_shdr = (uint8_t const *)shdr;
 
-	Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Shdr)];
+	Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Elf_Shdr)];
 	Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
 	Elf64_Xword const sh_flags = ELF_GET(elfclass, elfdata, section, sh_flags);
 
@@ -350,7 +353,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 	Elf64_Half const e_shsum = ELF_GET(elfclass, elfdata, ehdr, e_shnum);
 
 	for (Elf64_Half i = 0; i < e_shsum; i += 1) {
-		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * ELF_SIZE(elfclass, Shdr)];
+		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * ELF_SIZE(elfclass, Elf_Shdr)];
 		Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
 
 		if (sh_type != SHT_SYMTAB) {
@@ -360,7 +363,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		Elf64_Word const sh_link = ELF_GET(elfclass, elfdata, section, sh_link);
 
 		symtab_shdr = section;
-		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * ELF_SIZE(elfclass, Shdr)];
+		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * ELF_SIZE(elfclass, Elf_Shdr)];
 
 		Elf64_Xword sh_size = ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
 		Elf64_Xword sh_entsize = ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
@@ -380,7 +383,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 	size_t sym_i = 0;
 
 	for (Elf64_Xword j = 0; j < sym_count; j += 1) {
-		Elf_Sym const *symbol = (Elf_Sym const *)&raw_symbol_table[j * ELF_SIZE(elfclass, Sym)];
+		Elf_Sym const *symbol = (Elf_Sym const *)&raw_symbol_table[j * ELF_SIZE(elfclass, Elf_Sym)];
 		char const *symbol_name;
 		char type_char;
 
@@ -392,8 +395,8 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 				continue;
 			}
 
-			Elf_Shdr const *section_symbol = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, symbol, st_shndx) * ELF_SIZE(elfclass, Shdr)];
-			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, ehdr, e_shstrndx) * ELF_SIZE(elfclass, Shdr)];
+			Elf_Shdr const *section_symbol = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, symbol, st_shndx) * ELF_SIZE(elfclass, Elf_Shdr)];
+			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, ehdr, e_shstrndx) * ELF_SIZE(elfclass, Elf_Shdr)];
 			char const *section_string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, section_strtab, sh_offset)];
 
 			symbol_name = &section_string_table[ELF_GET(elfclass, elfdata, section_symbol, sh_name)];
