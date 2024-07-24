@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 07:13:28 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 07:16:48 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ static int ft_nm_elf32(struct config const *config, struct memory_map *mm, Elf32
 	return EXIT_SUCCESS;
 }
 
-static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name, unsigned char elfclass, unsigned char elfdata)
+static char _elf_section_type_char(Elf64_Shdr const *section, char const *name, unsigned char elfclass, unsigned char elfdata)
 {
 	Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, Shdr, section, sh_type);
 	Elf64_Xword const sh_flags = ELF_GET(elfclass, elfdata, Shdr, section, sh_flags);
@@ -140,7 +140,7 @@ static char _elf64_section_type_char(Elf64_Shdr const *section, char const *name
 	return sym_char;
 }
 
-static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr, unsigned char elfclass, unsigned char elfdata)
+static char _elf_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *shdr, unsigned char elfclass, unsigned char elfdata)
 {
 	Elf64_Section const st_shndx = ELF_GET(elfclass, elfdata, Sym, symbol, st_shndx);
 	unsigned char const st_info = ELF_GET(elfclass, elfdata, Sym, symbol, st_info);
@@ -347,10 +347,10 @@ static int ft_nm_elf64(struct config const *config, struct memory_map *mm, Elf64
 			char const *section_string_table = (char const *)((unsigned char const *)mm->map + FIX_BYTEORDER(elfdata, section_strtab->sh_offset));
 
 			symbol_name = &section_string_table[FIX_BYTEORDER(elfdata, section_symbol->sh_name)];
-			type_char = _elf64_section_type_char(section_symbol, symbol_name, elfclass, elfdata);
+			type_char = _elf_section_type_char(section_symbol, symbol_name, elfclass, elfdata);
 		} else {
 			symbol_name = &string_table[FIX_BYTEORDER(elfdata, symbol->st_name)];
-			type_char = _elf64_symbol_type_char(symbol, shdr, elfclass, elfdata);
+			type_char = _elf_symbol_type_char(symbol, shdr, elfclass, elfdata);
 		}
 
 		if (type_char != 'a' && symbol_name[0] == '\0') {
