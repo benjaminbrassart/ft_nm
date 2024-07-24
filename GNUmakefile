@@ -6,23 +6,23 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/24 02:30:15 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/07/24 02:32:17 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-MAKEFILE := $(lastword $(MAKEFILE_LIST))
+override MAKEFILE := $(lastword $(MAKEFILE_LIST))
 NAME := ft_nm
 
 DIR_LIBFT := ./libft
 NAME_LIBFT := libft.a
 DIR_OBJ := .
 
-SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c bswap.c
-OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
-DEP := $(OBJ:.o=.d)
+override SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c bswap.c
+override OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
+override DEP := $(OBJ:.o=.d)
 
-CFLAGS := -Wall -Wextra -Wconversion -g3 -O0 -fPIC
-CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c11 -MMD -MP -D_GNU_SOURCE
+override CFLAGS += -Wall -Wextra -Wconversion
+override CPPFLAGS += -I . -I $(DIR_LIBFT)/include -std=c11 -MMD -MP -D_GNU_SOURCE
 
 $(NAME): .EXTRA_PREREQS = $(DIR_LIBFT)/$(NAME_LIBFT)
 $(NAME): $(OBJ)
@@ -35,7 +35,9 @@ $(OBJ): $(DIR_OBJ)/%.c.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 version.c: version.c.in
-	VERSION_MAJOR=1 VERSION_MINOR=0 VERSION_PATCH=0 VERSION_COMMIT=$(shell git rev-parse --short HEAD)$(shell git diff-index --quiet HEAD -- || echo -dirty) envsubst < $< > $@
+	@VERSION_MAJOR=1 VERSION_MINOR=0 VERSION_PATCH=0 \
+	VERSION_COMMIT=$(shell git rev-parse --short HEAD)$(shell git diff-index --quiet HEAD || echo -dirty) \
+	envsubst < $< > $@
 
 $(DIR_LIBFT)/$(NAME_LIBFT):
 	$(MAKE) -C $(DIR_LIBFT) $(NAME_LIBFT)
@@ -44,10 +46,10 @@ $(DIR_LIBFT)/$(NAME_LIBFT):
 
 .PHONY: all clean fclean re
 
-all: $(NAME)
+all: $(NAME) $(ASM)
 
 clean:
-	$(RM) $(OBJ) $(DEP)
+	$(RM) $(OBJ) $(DEP) $(ASM)
 
 fclean: clean
 	$(RM) $(NAME) version.c

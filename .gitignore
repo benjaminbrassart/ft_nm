@@ -1,6 +1,7 @@
 /ft_nm
-*.o
-*.d
+*.c.o
+*.c.d
+*.c.s
 /version.c
 vgcore.*
 /logs/
