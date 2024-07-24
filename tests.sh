@@ -183,6 +183,12 @@ test_nm -a -- libnm.so
 test_nm -- test_files/*.o
 test_nm -a test_files/*.o
 test_nm -a test_files/ft_nm-afl++
+test_nm -g test_files/ft_nm-afl++
+test_nm -u test_files/ft_nm-afl++
+test_nm -ur test_files/ft_nm-afl++
+test_nm -up test_files/ft_nm-afl++
+test_nm -ar test_files/ft_nm-afl++
+test_nm -ap test_files/ft_nm-afl++
 
 test_nm /bin/ls
 test_nm /bin/*
