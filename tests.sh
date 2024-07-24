@@ -30,9 +30,7 @@ psub() {
     tmp="${tmpdir}/tmp.fifo" || return
 
     echo "${tmp}"
-    command cat > "${tmp}"
-    status="$?"
-    return "${status}"
+    cat > "${tmp}"
 }
 
 convert_error_message() {
