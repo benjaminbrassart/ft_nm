@@ -24,10 +24,15 @@ if [ -n "${USE_VALGRIND}" ]; then
     fi
 fi
 
+pid="$$"
+psub_dir="$(mktemp -d -- "tmp.psub.${pid}.XXXXXXXXXX")"
+
+trap 'rm -rvf -- "${psub_dir}"' EXIT
+
 # fish-like process substitution function for posix shell
 psub() {
-    tmpdir="$(mktemp -d)" || return
-    tmp="${tmpdir}/tmp.fifo" || return
+    tmpdir="$(mktemp -d -p "${psub_dir}")" || return
+    tmp="${tmpdir}/tmp" || return
 
     echo "${tmp}"
     cat > "${tmp}"
