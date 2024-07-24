@@ -5,35 +5,64 @@
 
 test_count=0
 status=0
+use_valgrind=
+
+if [ -n "${USE_VALGRIND}" ]; then
+    if valgrind_version="$(valgrind --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"; then
+        major="$(echo "${valgrind_version}" | cut -d '.' -f 1)"
+        minor="$(echo "${valgrind_version}" | cut -d '.' -f 2)"
+
+        if [ "${major}" -gt 3 ] || [ "${major}" -eq 3 ] && [ "${minor}" -ge 24 ]; then
+            use_valgrind='yes'
+        else
+            printf 'Error: valgrind version is < 3.24.0\n' >&2
+            exit 1
+        fi
+    else
+        printf 'Warning: could not parse valgrind version (is it in PATH?)\n' >&2
+        exit 1
+    fi
+fi
 
 test_nm() {
     test_count=$((test_count + 1))
+    mkdir -p "logs/${test_count}"
     args="$(echo "$@" | xargs)"
 
     printf -- '\n============ TEST %d ============\n\n' "${test_count}"
     printf -- '  ARGS: %s\n\n' "${args}"
 
-    echo "${args}" > "logs/${test_count}.command.log"
+    echo "${args}" > "logs/${test_count}/command.log"
 
     nm "$@" \
-        > "logs/${test_count}.stdout.nm.log" \
-        2> "logs/${test_count}.stderr.nm.log"
+        > "logs/${test_count}/stdout.nm.log" \
+        2> "logs/${test_count}/stderr.nm.log"
     exit_nm="$?"
-    echo "${exit_nm}" > "logs/${test_count}.exit.nm.log"
+    echo "${exit_nm}" > "logs/${test_count}/exit.nm.log"
 
-    ./ft_nm "$@" \
-        > "logs/${test_count}.stdout.ft.log" \
-        2> "logs/${test_count}.stderr.ft.log"
+    if [ -n "${use_valgrind}" ]; then
+        valgrind \
+            --error-exitcode=42 \
+            --track-fds=yes \
+            --show-leak-kinds=all \
+            --leak-check=full \
+            --xml=yes \
+            --xml-file="logs/${test_count}/valgrind.ft.xml" \
+            ./ft_nm "$@"
+    else
+        ./ft_nm "$@"
+    fi > "logs/${test_count}/stdout.ft.log" 2> "logs/${test_count}/stderr.ft.log"
+
     exit_ft="$?"
-    echo "${exit_ft}" > "logs/${test_count}.exit.ft.log"
+    echo "${exit_ft}" > "logs/${test_count}/exit.ft.log"
 
     git --no-pager diff --no-index --word-diff=color --word-diff-regex=. \
-        "logs/${test_count}.stdout.ft.log" \
-        "logs/${test_count}.stdout.nm.log"
+        "logs/${test_count}/stdout.ft.log" \
+        "logs/${test_count}/stdout.nm.log"
     git --no-pager diff --no-index \
-        "logs/${test_count}.stdout.ft.log" \
-        "logs/${test_count}.stdout.nm.log" \
-        > "logs/${test_count}.diff"
+        "logs/${test_count}/stdout.ft.log" \
+        "logs/${test_count}/stdout.nm.log" \
+        > "logs/${test_count}/diff"
 
     current_status="$?"
 
@@ -50,6 +79,7 @@ test_nm() {
     printf -- '\n=================================\n\n'
 }
 
+rm -rf logs
 mkdir -p logs
 
 test_nm
