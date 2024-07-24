@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 10:56:41 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 11:09:38 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,17 @@
 
 #define FIX_BYTEORDER(ElfData, X) \
 	(((ElfData) == ELFDATA_CURRENT) \
-	? X \
-	: GENERIC_SWAP(X))
+	? (X) \
+	: (GENERIC_SWAP(X)))
 
 #define ELF_MATCH(ElfClass, Case64, Case32) \
 	(((ElfClass) == ELFCLASS64) ? (Case64) : (Case32))
 
 #define ELF_SIZE(ElfClass, Type) \
-	ELF_MATCH(elfclass, sizeof(Elf64_ ## Type), sizeof(Elf32_ ## Type))
+	ELF_MATCH((ElfClass), sizeof(Elf64_ ## Type), sizeof(Elf32_ ## Type))
 
 #define ELF_GET(ElfClass, ElfData, Object, Param) \
-	(ELF_MATCH(ElfClass, \
+	(ELF_MATCH((ElfClass), \
 	(FIX_BYTEORDER(ElfData, (Object)->elf64.Param)), \
 	(FIX_BYTEORDER(ElfData, (Object)->elf32.Param))))
 
