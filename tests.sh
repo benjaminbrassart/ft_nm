@@ -27,7 +27,7 @@ fi
 pid="$$"
 psub_dir="$(mktemp -d -- "tmp.psub.${pid}.XXXXXXXXXX")"
 
-trap 'rm -rvf -- "${psub_dir}"' EXIT
+trap 'rm -rf -- "${psub_dir}"' EXIT
 
 # fish-like process substitution function for posix shell
 psub() {
