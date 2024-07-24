@@ -24,6 +24,25 @@ if [ -n "${USE_VALGRIND}" ]; then
     fi
 fi
 
+# fish-like process substitution function for posix shell
+psub() {
+    tmpdir="$(mktemp -d)" || return
+    tmp="${tmpdir}/tmp.fifo" || return
+
+    echo "${tmp}"
+    command cat > "${tmp}"
+    status="$?"
+    return "${status}"
+}
+
+convert_error_message() {
+    sed -e 's/^ft_nm/nm/' \
+        -e 's/No such file or directory/No such file/' \
+        -re 's/cannot open ([^:]+): No such file/'\''\1'\'': No such file/' \
+        -re 's/cannot open ([^:]+)/\1/' \
+        -re 's/cannot map ([^:]+): Is a directory/Warning: '\''\1'\'' is a directory/'
+}
+
 test_nm() {
     test_count=$((test_count + 1))
     mkdir -p "logs/${test_count}"
@@ -56,13 +75,21 @@ test_nm() {
     exit_ft="$?"
     echo "${exit_ft}" > "logs/${test_count}/exit.ft.log"
 
-    git --no-pager diff --no-index --word-diff=color --word-diff-regex=. \
+    git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
         "logs/${test_count}/stdout.ft.log" \
         "logs/${test_count}/stdout.nm.log"
-    git --no-pager diff --no-index \
+    git --no-pager diff --no-prefix --no-index \
         "logs/${test_count}/stdout.ft.log" \
         "logs/${test_count}/stdout.nm.log" \
-        > "logs/${test_count}/diff"
+        > "logs/${test_count}/stdout.diff"
+
+    git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
+        "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
+        "logs/${test_count}/stderr.nm.log"
+    git --no-pager diff --no-prefix --no-index \
+        "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
+        "logs/${test_count}/stderr.nm.log" \
+        > "logs/${test_count}/stderr.diff"
 
     current_status="$?"
 
@@ -145,5 +172,8 @@ test_nm -a -- libnm.so
 
 test_nm -- test_files/*.o
 test_nm -a test_files/*.o
+
+test_nm /bin/ls
+test_nm /bin/*
 
 exit "${status}"
