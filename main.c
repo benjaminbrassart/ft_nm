@@ -6,10 +6,11 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 23:06:09 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 00:42:42 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "bswap.h"
 #include "config.h"
 #include "memory_map.h"
 #include "options.h"
@@ -19,7 +20,6 @@
 #include "libft/ft.h"
 
 #include <elf.h>
-#include <endian.h>
 
 #include <errno.h>
 #include <stdbool.h>
@@ -38,18 +38,6 @@
 # define ELFDATA_CURRENT ELFDATA2MSB
 #endif
 
-// TODO implement bswap
-#define GENERIC_SWAP(X) (_Generic((X), \
-		uint8_t: X, \
-		int8_t: X, \
-		uint16_t: __bswap_16(X), \
-		int16_t: __bswap_16(X), \
-		uint32_t: __bswap_32(X), \
-		int32_t: __bswap_32(X), \
-		uint64_t: __bswap_64(X), \
-		int64_t: __bswap_64(X), \
-		default: ({}) \
-	))
 #define FIX_BYTEORDER(ElfData, X) \
 	(((ElfData) == ELFDATA_CURRENT) \
 	? X \
@@ -205,7 +193,7 @@ static char _elf64_symbol_type_char(Elf64_Sym const *symbol, Elf64_Shdr const *s
 		if (sh_type == SHT_PROGBITS) {
 			sym_char = 'r';
 		} else {
-		sym_char = 'n';
+			sym_char = 'n';
 		}
 	}
 

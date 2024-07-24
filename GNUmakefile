@@ -6,7 +6,7 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/23 06:24:49 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/07/24 02:30:15 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ DIR_LIBFT := ./libft
 NAME_LIBFT := libft.a
 DIR_OBJ := .
 
-SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c
+SRC := main.c options.c config.c version.c memory_map.c ft_qsort.c bswap.c
 OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 DEP := $(OBJ:.o=.d)
 
@@ -28,6 +28,7 @@ $(NAME): .EXTRA_PREREQS = $(DIR_LIBFT)/$(NAME_LIBFT)
 $(NAME): $(OBJ)
 	$(CC) $^ -o $@ -l:$(NAME_LIBFT) -L$(DIR_LIBFT)
 
+$(DIR_OBJ)/bswap.c.o: CFLAGS += -O2
 $(OBJ): .EXTRA_PREREQS = $(MAKEFILE)
 $(OBJ): $(DIR_OBJ)/%.c.o: %.c
 	@mkdir -p $(@D)
