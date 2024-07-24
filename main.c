@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/25 01:02:49 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/25 01:32:30 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -242,25 +242,27 @@ static int _compare_symbol(void const *p1, void const *p2)
 		return -1;
 	}
 
-	while (1) {
-		while (*s1 == '_' || *s1 == '.') {
+	while (true) {
+		while (!ft_isalnum(*s1) && *s1 != '\0') {
 			s1 += 1;
 		}
 
-		while (*s2 == '_' || *s2 == '.') {
+		while (!ft_isalnum(*s2) && *s2 != '\0') {
 			s2 += 1;
 		}
 
-		if (*s1 != '\0' && ft_toupper(*s1) == ft_toupper(*s2)) {
-			s1 += 1;
-			s2 += 1;
-		} else {
-			break;
+		if (*s1 == '\0' || *s2 == '\0' || ft_toupper(*s1) != ft_toupper(*s2)) {
+						break;
 		}
+	
+		s1 += 1;
+		s2 += 1;
 	}
 
-	// without '_' s1 and s2 are the same (case-insensitive)
-	// perform case-sensitive ascii string comparison
+	// taking into account only alphanumeric ascii characters, s1 == s2.
+	//
+	// perform 'normal' ascii comparison, so that // '__data_start' appears
+	// before 'data_start'.
 	if (*s1 == '\0' && *s2 == '\0') {
 		return ft_strcmp(sym1->name, sym2->name);
 	}
