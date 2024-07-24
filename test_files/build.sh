@@ -7,6 +7,9 @@ set -e
 c++ -c -g3 mangled.cpp -o mangled-32le.cpp.o -m32
 c++ -c -g3 mangled.cpp -o mangled-64le.cpp.o
 
+c++ -c -g3 -O0 oop-nonsense.cpp -o oop-nonsense-32le.cpp.o -m32
+c++ -c -g3 -O0 oop-nonsense.cpp -o oop-nonsense-64le.cpp.o
+
 cc -c -g3 gnu-constructor.c -o gnu-constructor.c.o
 
 # i686      => 32-bit little-endian
