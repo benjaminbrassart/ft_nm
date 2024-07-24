@@ -49,10 +49,15 @@ convert_error_message() {
 test_nm() {
     test_count=$((test_count + 1))
     mkdir -p "logs/${test_count}"
-    args="$(echo "$@" | xargs)"
 
     printf -- '\n============ TEST %d ============\n\n' "${test_count}"
+
+    if [ "$#" -le 15 ]; then
+        args="$(echo "$@" | xargs)"
     printf -- '  ARGS: %s\n\n' "${args}"
+    else
+        printf -- '  ARGS: [%d arguments]\n\n' "$#"
+    fi
 
     echo "${args}" > "logs/${test_count}/command.log"
 
