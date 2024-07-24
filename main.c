@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/24 10:55:13 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/24 10:56:41 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,6 +276,37 @@ static void _fill_offbuf(char buf[], size_t n, uint64_t value)
 		n -= 1;
 	}
 }
+
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
+// TODO add bounds checking EVERYWHERE!!
 
 static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Ehdr const *ehdr, char const *file)
 {
