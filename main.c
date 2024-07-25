@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/25 12:11:38 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/25 12:45:59 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,10 +284,10 @@ static int _compare_symbol(void const *p1, void const *p2)
 	if (c1 == '\0' && c2 == '\0') {
 		size_t i_min;
 
-		if (i1 > i2) {
-			i_min = i2;
+		if (sym1->name_length > sym2->name_length) {
+			i_min = sym2->name_length;
 		} else {
-			i_min = i1;
+			i_min = sym1->name_length;
 		}
 
 		return ft_strncmp(sym1->name, sym2->name, i_min);
