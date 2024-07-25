@@ -2,6 +2,3 @@
 	path = libft
 	url = https://github.com/benjaminbrassart/libft.git
 	branch = production
-[submodule "melkor"]
-	path = melkor
-	url = https://github.com/IOActive/Melkor_ELF_Fuzzer.git
