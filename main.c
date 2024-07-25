@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/25 01:32:30 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/25 12:11:38 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ struct symbol {
 	uint64_t value;
 	int has_value;
 	char const *name;
+	size_t name_length;
 	char type_char;
 };
 
@@ -214,8 +215,6 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		} else {
 			sym_char = 'n';
 		}
-	} else {
-		sym_char = '?';
 	}
 
 	if (st_bind == STB_LOCAL) {
@@ -225,49 +224,76 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 	return sym_char;
 }
 
+static inline char _symbol_name_at(struct symbol const *sym, size_t index)
+{
+	if (index >= sym->name_length) {
+		return '\0';
+	}
+
+	return sym->name[index];
+}
+
 static int _compare_symbol(void const *p1, void const *p2)
 {
 	struct symbol const *sym1 = p1;
 	struct symbol const *sym2 = p2;
-	char const *s1 = sym1->name;
-	char const *s2 = sym2->name;
+	size_t i1 = 0;
+	size_t i2 = 0;
+	char c1;
+	char c2;
 
-	if (s1 == s2) {
+	if (sym1->name == sym2->name) {
 		return 0;
 	}
 
-	if (s1 == NULL) {
+	if (sym1->name == NULL) {
 		return 1;
-	} else if (s2 == NULL) {
+	} else if (sym2->name == NULL) {
 		return -1;
 	}
 
 	while (true) {
-		while (!ft_isalnum(*s1) && *s1 != '\0') {
-			s1 += 1;
+		while (true) {
+			c1 = _symbol_name_at(sym1, i1);
+			if (ft_isalnum(c1) || c1 == '\0') {
+				break;
+			}
+			i1 += 1;
 		}
 
-		while (!ft_isalnum(*s2) && *s2 != '\0') {
-			s2 += 1;
+		while (true) {
+			c2 = _symbol_name_at(sym2, i2);
+			if (ft_isalnum(c2) || c2 == '\0') {
+				break;
+			}
+			i2 += 1;
 		}
 
-		if (*s1 == '\0' || *s2 == '\0' || ft_toupper(*s1) != ft_toupper(*s2)) {
-						break;
+		if (c1 == '\0' || c2 == '\0' || ft_toupper(c1) != ft_toupper(c2)) {
+			break;
 		}
-	
-		s1 += 1;
-		s2 += 1;
+
+		i1 += 1;
+		i2 += 1;
 	}
 
 	// taking into account only alphanumeric ascii characters, s1 == s2.
 	//
-	// perform 'normal' ascii comparison, so that // '__data_start' appears
-	// before 'data_start'.
-	if (*s1 == '\0' && *s2 == '\0') {
-		return ft_strcmp(sym1->name, sym2->name);
+	// perform 'normal' ascii comparison, so that, for example,
+	// '__data_start' appears before 'data_start'.
+	if (c1 == '\0' && c2 == '\0') {
+		size_t i_min;
+
+		if (i1 > i2) {
+			i_min = i2;
+		} else {
+			i_min = i1;
+		}
+
+		return ft_strncmp(sym1->name, sym2->name, i_min);
 	}
 
-	return ft_toupper(*s1) - ft_toupper(*s2);
+	return ft_toupper(c1) - ft_toupper(c2);
 }
 
 static void _fill_valbuf(char buf[], size_t n, uint64_t value)
@@ -282,38 +308,7 @@ static void _fill_valbuf(char buf[], size_t n, uint64_t value)
 	}
 }
 
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-// TODO add bounds checking EVERYWHERE!!
-
-static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Ehdr const *ehdr, char const *file)
+static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, Elf_Ehdr const *ehdr, char const *file)
 {
 	bool extern_only = false;
 	bool undefined_only = false;
@@ -338,9 +333,15 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		debug_symbols = false;
 	}
 
-	uint8_t const *raw_map = mm->map;
+	Elf64_Off const e_shoff = ELF_GET(elfclass, elfdata, ehdr, e_shoff);
 
-	uint8_t const *raw_shdr = &raw_map[ELF_GET(elfclass, elfdata, ehdr, e_shoff)];
+	uint8_t const *raw_map = mm->start;
+	uint8_t const *raw_shdr = &raw_map[e_shoff];
+
+	if (!mm_check(mm, raw_shdr, ELF_SIZE(elfclass, Elf_Shdr))) {
+		return EXIT_FAILURE;
+	}
+
 	Elf_Shdr const *symtab_shdr = NULL;
 	Elf_Shdr const *strtab_shdr = NULL;
 	char const *string_table = NULL;
@@ -351,10 +352,33 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 
 	Elf64_Xword sym_count = 0;
 
-	Elf64_Half const e_shsum = ELF_GET(elfclass, elfdata, ehdr, e_shnum);
+	/*
+	   TODO from documentation:
 
-	for (Elf64_Half i = 0; i < e_shsum; i += 1) {
-		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * ELF_SIZE(elfclass, Elf_Shdr)];
+	   If the number of entries in the section header table is
+	   larger than or equal to SHN_LORESERVE (0xff00), e_shnum
+	   holds the value zero and the real number of entries in the
+	   section header table is held in the sh_size member of the
+	   initial entry in section header table.  Otherwise, the
+	   sh_size member of the initial entry in the section header
+	   table holds the value zero.
+	 */
+
+	Elf64_Half const e_shentsize = ELF_GET(elfclass, elfdata, ehdr, e_shentsize);
+	Elf64_Half const e_shnum = ELF_GET(elfclass, elfdata, ehdr, e_shnum);
+
+	if (!mm_check(mm, raw_shdr, e_shnum * e_shentsize)) {
+		return EXIT_FAILURE;
+	}
+
+	for (Elf64_Half i = 0; i < e_shnum; i += 1) {
+		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * e_shentsize];
+
+		// TODO necessary? we check (e_shnum * e_shentsize) above
+		if (!mm_check(mm, section, e_shentsize)) {
+			return EXIT_FAILURE;
+		}
+
 		Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
 
 		if (sh_type != SHT_SYMTAB) {
@@ -363,8 +387,17 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 
 		Elf64_Word const sh_link = ELF_GET(elfclass, elfdata, section, sh_link);
 
+		if (sh_link >= e_shnum) {
+			return EXIT_FAILURE;
+		}
+
 		symtab_shdr = section;
-		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * ELF_SIZE(elfclass, Elf_Shdr)];
+		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * e_shentsize];
+
+		// TODO ditto
+		if (!mm_check(mm, strtab_shdr, e_shentsize)) {
+			return EXIT_FAILURE;
+		}
 
 		Elf64_Xword sh_size = ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
 		Elf64_Xword sh_entsize = ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
@@ -373,10 +406,12 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, strtab_shdr, sh_offset)];
 		string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata, strtab_shdr, sh_size);
 
+		if (!mm_check(mm, string_table, string_table_length)) {
+			return EXIT_FAILURE;
+		}
+
 		break;
 	}
-
-	struct symbol *symbols = NULL;
 
 	if (sym_count == 0) {
 		write(STDERR_FILENO, "ft_nm: ", 7);
@@ -385,6 +420,8 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 
 		return EXIT_SUCCESS;
 	}
+
+	struct symbol *symbols = NULL;
 
 	symbols = ft_calloc((size_t)sym_count, sizeof(*symbols));
 	if (symbols == NULL) {
@@ -411,9 +448,14 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, ehdr, e_shstrndx) * ELF_SIZE(elfclass, Elf_Shdr)];
 			char const *section_string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, section_strtab, sh_offset)];
 
+			// TODO get strtab size to check bounds for symbol name,
+			// or perhaps just a pointer to the end to do something
+			// like `name_length = ft_strnlen(symbol_name, strtab_end - symbol_name)`
+
 			symbol_name = &section_string_table[ELF_GET(elfclass, elfdata, section_symbol, sh_name)];
 			type_char = _elf_section_type_char(section_symbol, symbol_name, elfclass, elfdata);
 		} else {
+			// TODO ditto
 			symbol_name = &string_table[ELF_GET(elfclass, elfdata, symbol, st_name)];
 			type_char = _elf_symbol_type_char(symbol, raw_shdr, elfclass, elfdata);
 		}
@@ -449,6 +491,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		}
 
 		symbols[sym_i].name = symbol_name;
+		symbols[sym_i].name_length = ft_strlen(symbol_name); // TODO
 		symbols[sym_i].type_char = type_char;
 
 		switch (symbols[sym_i].type_char) {
@@ -511,7 +554,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 		write(STDOUT_FILENO, " ", 1);
 		write(STDOUT_FILENO, &symbol->type_char, 1);
 		write(STDOUT_FILENO, " ", 1);
-		write(STDOUT_FILENO, symbol->name, ft_strlen(symbol->name));
+		write(STDOUT_FILENO, symbol->name, symbol->name_length);
 		write(STDOUT_FILENO, "\n", 1);
 	}
 
@@ -519,44 +562,79 @@ static int _ft_nm_elf(struct config const *config, struct memory_map *mm, Elf_Eh
 	return EXIT_SUCCESS;
 }
 
-static int ft_nm_elf(struct config const *config, struct memory_map *mm, Elf32_Ehdr const *ehdr, char const *file)
+static int _check_ehdr(char const *file, Elf_Ehdr const *ehdr)
 {
-	switch (ehdr->e_ident[EI_CLASS]) {
-	case ELFCLASS32:
-		// return ft_nm_elf32(config, mm, ehdr, file);
+	uint8_t const elfclass = ehdr->elf32.e_ident[EI_CLASS];
 
-	case ELFCLASS64: {
-		return _ft_nm_elf(config, mm, mm->map, file);
-	}
-
-	default:
+	if (elfclass != ELFCLASS32 && elfclass != ELFCLASS64) {
+		write(STDERR_FILENO, file, ft_strlen(file));
+		write(STDERR_FILENO, ": invalid ELF class\n", 20);
 		return EXIT_FAILURE;
 	}
+
+	uint8_t const elfdata = ehdr->elf32.e_ident[EI_DATA];
+
+	if (elfdata != ELFDATA2LSB && elfdata != ELFDATA2MSB) {
+		write(STDERR_FILENO, file, ft_strlen(file));
+		write(STDERR_FILENO, ": invalid ELF byte ordering\n", 28);
+		return EXIT_FAILURE;
+	}
+
+	uint8_t const elfversion = ehdr->elf32.e_ident[EI_VERSION];
+
+	if (elfversion != EV_CURRENT) {
+		write(STDERR_FILENO, ": invalid ELF version\n", 22);
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+static int ft_nm_elf(struct config const *config, struct memory_map const *mm, char const *file)
+{
+	Elf_Ehdr const *ehdr = mm->start;
+	int check_header = _check_ehdr(file, ehdr);
+
+	if (check_header != EXIT_SUCCESS) {
+		return check_header;
+	}
+
+	return _ft_nm_elf(config, mm, ehdr, file);
 }
 
 static int ft_nm_map(struct config const *config, void const *map, size_t map_size, char const *file)
 {
-	struct memory_map root_map = {
-		.map = map,
-		.map_size = map_size,
-	};
+	struct memory_map root_map = mm_new(map, map_size);
+	uint8_t const *e_ident = map;
 
-	Elf32_Ehdr const *ehdr = mm_read(&root_map, 0, sizeof(*ehdr));
+	do {
+		if (!mm_check(&root_map, e_ident, EI_NIDENT)) {
+			break;
+		}
 
-	if (ehdr != NULL && ft_memcmp(&ehdr->e_ident[EI_MAG0], ELFMAG, SELFMAG) == 0) {
+		if (!(ft_memcmp(e_ident, ELFMAG, SELFMAG) == 0)) {
+			break;
+		}
+
 		if (config->print_file_name) {
 			write(STDOUT_FILENO, "\n", 1);
 			write(STDOUT_FILENO, file, ft_strlen(file));
 			write(STDOUT_FILENO, ":\n", 2);
 		}
 
-		return ft_nm_elf(config, &root_map, ehdr, file);
-	} else {
-		write(STDERR_FILENO, "ft_nm: ", 7);
-		write(STDERR_FILENO, file, ft_strlen(file));
-		write(STDERR_FILENO, ": file format not recognized\n", 29);
-		return EXIT_FAILURE;
-	}
+		uint8_t const elfclass = e_ident[EI_CLASS];
+
+		if (!mm_check(&root_map, map, ELF_SIZE(elfclass, Elf_Ehdr))) {
+			break;
+		}
+
+		return ft_nm_elf(config, &root_map, file);
+	} while (false);
+
+	write(STDERR_FILENO, "ft_nm: ", 7);
+	write(STDERR_FILENO, file, ft_strlen(file));
+	write(STDERR_FILENO, ": file format not recognized\n", 29);
+	return EXIT_FAILURE;
 }
 
 static int ft_nm_file(struct config const *config, char const *file)

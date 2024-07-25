@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 16:11:39 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 01:48:12 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/25 10:04:04 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,68 +15,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void const *mm_read(struct memory_map const *mm, size_t offset, size_t n)
+bool mm_check(struct memory_map const *mm, void const *ptr, size_t length)
 {
-	if (offset + n > mm->map_size) {
-		return NULL;
+	uintptr_t const start = (uintptr_t)mm->start;
+	uintptr_t const end = (uintptr_t)mm->end;
+	uintptr_t const p_start = (uintptr_t)ptr;
+
+#if SIZE_MAX > UINTPTR_MAX
+	if (length > UINTPTR_MAX || length > (size_t)(UINTPTR_MAX - p_start)) {
+		return false;
 	}
 
-	return (void const *)((uintptr_t)mm->map + offset);
-}
-
-void const *mm_sub(struct memory_map const *mm, struct memory_map *new_mm, size_t offset, size_t n)
-{
-	if (new_mm == NULL) {
-		return NULL;
-	}
-
-	if (offset + n >= mm->map_size) {
-		return NULL;
-	}
-
-	new_mm->map = (void const *)((uintptr_t)mm->map + offset);
-	new_mm->map_size = n;
-
-	return new_mm->map;
-}
-
-#ifdef UNIT_TEST
-
-#include <assert.h>
-#include <stdio.h>
-
-static void test_mm_read(void)
-{
-	char buffer[16] = "hello!";
-	struct memory_map mm;
-
-	mm.map = buffer;
-	mm.map_size = sizeof(buffer);
-
-	assert(mm_read(&mm, 0, 0) != NULL);
-	assert(mm_read(&mm, 0, 16) != NULL);
-	assert(mm_read(&mm, 16, 0) != NULL);
-	{
-		void const *r = mm_read(&mm, 4, 3);
-
-		assert(r != NULL);
-		assert(r == (void const *)((uintptr_t)mm.map + 4));
-	}
-
-	assert(mm_read(&mm, 16 + 1, 0) == NULL);
-	assert(mm_read(&mm, 0, 16 + 1) == NULL);
-	assert(mm_read(&mm, 0, 16 + 1) == NULL);
-}
-
-static void test_mm_sub(void)
-{
-
-}
-
-int main(void)
-{
-	test_mm_read();
-	test_mm_sub();
-}
-
+	uintptr_t const p_end = p_start + (uintptr_t)length;
+#else
+	uintptr_t const p_end = p_start + length;
 #endif
+
+	return p_start >= start && p_end <= end;
+}
