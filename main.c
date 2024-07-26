@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/25 12:45:59 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/26 03:46:42 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -567,6 +567,7 @@ static int _check_ehdr(char const *file, Elf_Ehdr const *ehdr)
 	uint8_t const elfclass = ehdr->elf32.e_ident[EI_CLASS];
 
 	if (elfclass != ELFCLASS32 && elfclass != ELFCLASS64) {
+		write(STDERR_FILENO, "ft_nm: ", 7);
 		write(STDERR_FILENO, file, ft_strlen(file));
 		write(STDERR_FILENO, ": invalid ELF class\n", 20);
 		return EXIT_FAILURE;
@@ -575,6 +576,7 @@ static int _check_ehdr(char const *file, Elf_Ehdr const *ehdr)
 	uint8_t const elfdata = ehdr->elf32.e_ident[EI_DATA];
 
 	if (elfdata != ELFDATA2LSB && elfdata != ELFDATA2MSB) {
+write(STDERR_FILENO, "ft_nm: ", 7);
 		write(STDERR_FILENO, file, ft_strlen(file));
 		write(STDERR_FILENO, ": invalid ELF byte ordering\n", 28);
 		return EXIT_FAILURE;
@@ -583,6 +585,8 @@ static int _check_ehdr(char const *file, Elf_Ehdr const *ehdr)
 	uint8_t const elfversion = ehdr->elf32.e_ident[EI_VERSION];
 
 	if (elfversion != EV_CURRENT) {
+write(STDERR_FILENO, "ft_nm: ", 7);
+		write(STDERR_FILENO, file, ft_strlen(file));
 		write(STDERR_FILENO, ": invalid ELF version\n", 22);
 		return EXIT_FAILURE;
 	}
