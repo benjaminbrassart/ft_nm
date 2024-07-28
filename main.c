@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/26 03:50:09 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/28 16:34:18 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,16 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		}
 	} else if (st_shndx == SHN_COMMON) {
 		return 'C';
+} else if (st_shndx == SHN_UNDEF) {
+		if (st_bind == STB_WEAK) {
+			if (st_type == STT_OBJECT) {
+				return 'v';
+			} else {
+				return 'w';
+			}
+		} else {
+			return 'U';
+		}
 	} else if (st_shndx >= SHN_LORESERVE /* && st_shndx <= SHN_HIRESERVE */) {
 		return '?';
 	}
@@ -175,17 +185,7 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 
 	if (st_bind == STB_GNU_UNIQUE) {
 		sym_char = 'u';
-	} else if (st_shndx == SHN_UNDEF) {
-		sym_char = 'U';
-
-		if (st_bind == STB_WEAK) {
-			if (st_type == STT_OBJECT) {
-				sym_char = 'v';
-			} else {
-				sym_char = 'w';
-			}
-		}
-	} else if (st_bind == STB_WEAK) {
+		} else if (st_bind == STB_WEAK) {
 		if (st_type == STT_OBJECT) {
 			sym_char = 'V';
 		} else {
