@@ -161,7 +161,7 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		}
 	} else if (st_shndx == SHN_COMMON) {
 		return 'C';
-} else if (st_shndx == SHN_UNDEF) {
+	} else if (st_shndx == SHN_UNDEF) {
 		if (st_bind == STB_WEAK) {
 			if (st_type == STT_OBJECT) {
 				return 'v';
@@ -185,7 +185,7 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 
 	if (st_bind == STB_GNU_UNIQUE) {
 		sym_char = 'u';
-		} else if (st_bind == STB_WEAK) {
+	} else if (st_bind == STB_WEAK) {
 		if (st_type == STT_OBJECT) {
 			sym_char = 'V';
 		} else {
@@ -347,9 +347,6 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 	char const *string_table = NULL;
 	Elf64_Word string_table_length = 0;
 
-	// TODO check string table length + terminator
-	(void)string_table_length;
-
 	Elf64_Xword sym_count = 0;
 
 	/*
@@ -373,12 +370,6 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 
 	for (Elf64_Half i = 0; i < e_shnum; i += 1) {
 		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * e_shentsize];
-
-		// TODO necessary? we check (e_shnum * e_shentsize) above
-		if (!mm_check(mm, section, e_shentsize)) {
-			return EXIT_FAILURE;
-		}
-
 		Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
 
 		if (sh_type != SHT_SYMTAB) {
@@ -391,16 +382,19 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 			return EXIT_FAILURE;
 		}
 
-		symtab_shdr = section;
-		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * e_shentsize];
-
-		// TODO ditto
-		if (!mm_check(mm, strtab_shdr, e_shentsize)) {
+		if (sh_link == SHN_UNDEF) {
 			return EXIT_FAILURE;
 		}
 
-		Elf64_Xword sh_size = ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
-		Elf64_Xword sh_entsize = ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
+		symtab_shdr = section;
+		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * e_shentsize];
+
+		Elf64_Xword const sh_size = ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
+		Elf64_Xword const sh_entsize = ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
+
+		if (sh_size % sh_entsize != 0) {
+			return EXIT_FAILURE;
+		}
 
 		sym_count = sh_size / sh_entsize;
 		string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, strtab_shdr, sh_offset)];
@@ -421,6 +415,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		return EXIT_SUCCESS;
 	}
 
+	char const *string_table_end = &string_table[string_table_length];
 	struct symbol *symbols = NULL;
 
 	symbols = ft_calloc((size_t)sym_count, sizeof(*symbols));
@@ -434,6 +429,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 	for (Elf64_Xword j = 0; j < sym_count; j += 1) {
 		Elf_Sym const *symbol = (Elf_Sym const *)&raw_symbol_table[j * ELF_SIZE(elfclass, Elf_Sym)];
 		char const *symbol_name;
+		size_t symbol_name_length;
 		char type_char;
 
 		uint8_t const st_info = ELF_GET(elfclass, elfdata, symbol, st_info);
@@ -444,19 +440,61 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 				continue;
 			}
 
-			Elf_Shdr const *section_symbol = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, symbol, st_shndx) * ELF_SIZE(elfclass, Elf_Shdr)];
-			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[ELF_GET(elfclass, elfdata, ehdr, e_shstrndx) * ELF_SIZE(elfclass, Elf_Shdr)];
-			char const *section_string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, section_strtab, sh_offset)];
+			Elf64_Section const st_shndx = ELF_GET(elfclass, elfdata, symbol, st_shndx);
+			Elf_Shdr const *section_symbol = (Elf_Shdr const *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Elf_Shdr)];
 
-			// TODO get strtab size to check bounds for symbol name,
-			// or perhaps just a pointer to the end to do something
-			// like `name_length = ft_strnlen(symbol_name, strtab_end - symbol_name)`
+			if (st_shndx >= e_shnum) {
+				return EXIT_FAILURE;
+			}
 
-			symbol_name = &section_string_table[ELF_GET(elfclass, elfdata, section_symbol, sh_name)];
+			Elf64_Half const e_shstrndx = ELF_GET(elfclass, elfdata, ehdr, e_shstrndx);
+
+			if (e_shstrndx >= e_shnum) {
+				return EXIT_FAILURE;
+			}
+
+			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[e_shstrndx * ELF_SIZE(elfclass, Elf_Shdr)];
+
+			Elf64_Off const sh_offset = ELF_GET(elfclass, elfdata, section_strtab, sh_offset);
+			char const *section_string_table = (char const *)&raw_map[sh_offset];
+			Elf64_Word const section_string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata, section_strtab, sh_size);
+
+			if (!mm_check(mm, string_table, string_table_length)) {
+				return EXIT_FAILURE;
+			}
+
+			char const *section_string_table_end = &section_string_table[section_string_table_length];
+
+			Elf64_Word const sh_name = ELF_GET(elfclass, elfdata, section_symbol, sh_name);
+
+			if (sh_name >= section_string_table_length) {
+				return EXIT_FAILURE;
+			}
+
+			if (sh_name == 0) {
+				symbol_name = "";
+				symbol_name_length = 0;
+			} else {
+				symbol_name = &section_string_table[sh_name];
+				symbol_name_length = ft_strnlen(symbol_name, (size_t)(section_string_table_end - symbol_name));
+			}
+
 			type_char = _elf_section_type_char(section_symbol, symbol_name, elfclass, elfdata);
 		} else {
-			// TODO ditto
-			symbol_name = &string_table[ELF_GET(elfclass, elfdata, symbol, st_name)];
+			Elf64_Word const st_name = ELF_GET(elfclass, elfdata, symbol, st_name);
+
+			if (st_name >= string_table_length) {
+				return EXIT_FAILURE;
+			}
+
+			if (st_name == 0) {
+				symbol_name = "";
+				symbol_name_length = 0;
+			} else {
+				symbol_name = &string_table[st_name];
+				symbol_name_length = ft_strnlen(symbol_name, (size_t)(string_table_end - symbol_name));
+			}
+
 			type_char = _elf_symbol_type_char(symbol, raw_shdr, elfclass, elfdata);
 		}
 
@@ -491,7 +529,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		}
 
 		symbols[sym_i].name = symbol_name;
-		symbols[sym_i].name_length = ft_strlen(symbol_name); // TODO
+		symbols[sym_i].name_length = symbol_name_length;
 		symbols[sym_i].type_char = type_char;
 
 		switch (symbols[sym_i].type_char) {
