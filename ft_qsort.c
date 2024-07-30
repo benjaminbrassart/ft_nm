@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:28:20 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/23 05:06:04 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:12:35 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@ struct array {
 	uint8_t *data;
 	size_t memb_size;
 };
-static void _swap(struct array *arr, size_t a, size_t b) {
+static void _swap(struct array *arr, size_t a, size_t b)
+{
 	uint8_t *p = arr->data + a * arr->memb_size;
 	uint8_t *q = arr->data + b * arr->memb_size;
 	uint8_t tmp;
@@ -30,7 +31,8 @@ static void _swap(struct array *arr, size_t a, size_t b) {
 	}
 }
 
-static size_t _partition(struct array *arr, size_t low, size_t high, cmp_func_t *cmp)
+static size_t _partition(struct array *arr, size_t low, size_t high,
+			 cmp_func_t *cmp)
 {
 	uint8_t const *pivot = arr->data + high * arr->memb_size;
 	size_t i = low;
@@ -46,7 +48,8 @@ static size_t _partition(struct array *arr, size_t low, size_t high, cmp_func_t 
 	return i;
 }
 
-static void _quicksort(struct array *arr, size_t low, size_t high, cmp_func_t *cmp)
+static void _quicksort(struct array *arr, size_t low, size_t high,
+		       cmp_func_t *cmp)
 {
 	size_t pivot;
 

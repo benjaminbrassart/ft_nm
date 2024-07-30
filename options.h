@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 12:30:25 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:12:12 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,4 +48,5 @@ struct option {
 	bool early_exit;
 };
 
-enum parse_config_result parse_options(int *argc, char const *argv[], struct config *config);
+enum parse_config_result parse_options(int *argc, char const *argv[],
+				       struct config *config);

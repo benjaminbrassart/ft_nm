@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 12:18:51 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/22 00:12:21 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:12:38 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,15 +23,15 @@ enum unicode_display {
 
 struct config {
 	/** -a, --debug-syms */
-	unsigned debug_symbols   : 1;
+	unsigned debug_symbols : 1;
 	/** -g, --extern-only */
-	unsigned extern_only     : 1;
+	unsigned extern_only : 1;
 	/** -p, --no-sort */
-	unsigned no_sort         : 1;
+	unsigned no_sort : 1;
 	/** -r, --reverse-sort */
-	unsigned reverse_sort    : 1;
+	unsigned reverse_sort : 1;
 	/** -u, --undefined-only */
-	unsigned undefined_only  : 1;
+	unsigned undefined_only : 1;
 	/** -V, --version */
 	unsigned display_version : 1;
 	/** */

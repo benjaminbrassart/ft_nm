@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 16:10:26 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/25 12:12:08 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:12:16 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,11 @@ struct memory_map {
 	void const *end;
 };
 
-#define mm_new(Ptr, Size) { \
-	.start = Ptr, \
-	.end = (void const *)((uint8_t const *)Ptr + Size), \
-}
+#define mm_new(Ptr, Size)                                           \
+	{                                                           \
+		.start = Ptr,                                       \
+		.end = (void const *)((uint8_t const *)Ptr + Size), \
+	}
 
 /**
  * Check whether a pointer is within bounds of a memory map

@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 10:39:06 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/28 16:34:18 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/07/30 12:12:31 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,29 +33,27 @@
 #include <unistd.h>
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-# define ELFDATA_CURRENT ELFDATA2LSB
+#define ELFDATA_CURRENT ELFDATA2LSB
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-# define ELFDATA_CURRENT ELFDATA2MSB
+#define ELFDATA_CURRENT ELFDATA2MSB
 #endif
 
 #define FIX_BYTEORDER(ElfData, X) \
-	(((ElfData) == ELFDATA_CURRENT) \
-	? (X) \
-	: (GENERIC_SWAP(X)))
+	(((ElfData) == ELFDATA_CURRENT) ? (X) : (GENERIC_SWAP(X)))
 
-#define sizeof_field(Struct, Field) \
-	(sizeof(((Struct const *)NULL)->Field))
+#define sizeof_field(Struct, Field) (sizeof(((Struct const *)NULL)->Field))
 
 #define ELF_MATCH(ElfClass, Case64, Case32) \
 	(((ElfClass) == ELFCLASS64) ? (Case64) : (Case32))
 
-#define ELF_SIZE(ElfClass, Type) \
-	ELF_MATCH((ElfClass), sizeof_field(Type, elf64), sizeof_field(Type, elf32))
+#define ELF_SIZE(ElfClass, Type)                         \
+	ELF_MATCH((ElfClass), sizeof_field(Type, elf64), \
+		  sizeof_field(Type, elf32))
 
-#define ELF_GET(ElfClass, ElfData, Object, Param) \
-	(ELF_MATCH((ElfClass), \
-	(FIX_BYTEORDER(ElfData, (Object)->elf64.Param)), \
-	(FIX_BYTEORDER(ElfData, (Object)->elf32.Param))))
+#define ELF_GET(ElfClass, ElfData, Object, Param)                   \
+	(ELF_MATCH((ElfClass),                                      \
+		   (FIX_BYTEORDER(ElfData, (Object)->elf64.Param)), \
+		   (FIX_BYTEORDER(ElfData, (Object)->elf32.Param))))
 
 struct symbol {
 	uint64_t value;
@@ -65,17 +63,17 @@ struct symbol {
 	char type_char;
 };
 
-#define MAKE_ELF_UNION(Type) \
-typedef union { \
-	Elf32_ ## Type elf32; \
-	Elf64_ ## Type elf64; \
-} Elf_ ## Type;
+#define MAKE_ELF_UNION(Type)        \
+	typedef union {             \
+		Elf32_##Type elf32; \
+		Elf64_##Type elf64; \
+	} Elf_##Type;
 
 MAKE_ELF_UNION(Ehdr);
 MAKE_ELF_UNION(Shdr);
 MAKE_ELF_UNION(Sym);
 
-static char const COPYRIGHT_NOTICE[] =
+static char const COPYRIGHT[] =
 	"\n"
 	"\n"
 	"Copyright (C) 2024 Benjamin Brassart\n"
@@ -105,7 +103,7 @@ int main(int argc, char const *argv[])
 	if (config.display_version) {
 		write(STDOUT_FILENO, "ft_nm version ", 14);
 		write(STDOUT_FILENO, VERSION_STRING, ft_strlen(VERSION_STRING));
-		write(STDOUT_FILENO, COPYRIGHT_NOTICE, sizeof(COPYRIGHT_NOTICE) - 1);
+		write(STDOUT_FILENO, COPYRIGHT, sizeof(COPYRIGHT) - 1);
 		return EXIT_SUCCESS;
 	}
 
@@ -121,10 +119,12 @@ int main(int argc, char const *argv[])
 	return ft_nm(&config, &argv[1], argc - 1);
 }
 
-static char _elf_section_type_char(Elf_Shdr const *section, char const *name, uint8_t elfclass, uint8_t elfdata)
+static char _elf_section_type_char(Elf_Shdr const *section, char const *name,
+				   uint8_t elfclass, uint8_t elfdata)
 {
 	Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
-	Elf64_Xword const sh_flags = ELF_GET(elfclass, elfdata, section, sh_flags);
+	Elf64_Xword const sh_flags =
+		ELF_GET(elfclass, elfdata, section, sh_flags);
 
 	char sym_char = '?';
 
@@ -145,13 +145,17 @@ static char _elf_section_type_char(Elf_Shdr const *section, char const *name, ui
 	return sym_char;
 }
 
-static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8_t elfclass, uint8_t elfdata)
+static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr,
+				  uint8_t elfclass, uint8_t elfdata)
 {
-	Elf64_Section const st_shndx = ELF_GET(elfclass, elfdata, symbol, st_shndx);
+	Elf64_Section const st_shndx =
+		ELF_GET(elfclass, elfdata, symbol, st_shndx);
 	uint8_t const st_info = ELF_GET(elfclass, elfdata, symbol, st_info);
 
-	uint8_t const st_bind = ELF_MATCH(elfclass, ELF64_ST_BIND(st_info), ELF32_ST_BIND(st_info));
-	uint8_t const st_type = ELF_MATCH(elfclass, ELF64_ST_TYPE(st_info), ELF32_ST_TYPE(st_info));
+	uint8_t const st_bind = ELF_MATCH(elfclass, ELF64_ST_BIND(st_info),
+					  ELF32_ST_BIND(st_info));
+	uint8_t const st_type = ELF_MATCH(elfclass, ELF64_ST_TYPE(st_info),
+					  ELF32_ST_TYPE(st_info));
 
 	if (st_shndx == SHN_ABS) {
 		if (st_type == STT_FILE) {
@@ -171,15 +175,23 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		} else {
 			return 'U';
 		}
-	} else if (st_shndx >= SHN_LORESERVE /* && st_shndx <= SHN_HIRESERVE */) {
+	} else if (st_shndx >=
+		   SHN_LORESERVE /* && st_shndx <= SHN_HIRESERVE */) {
 		return '?';
+	}
+
+	if (st_bind == STB_GNU_UNIQUE) {
+		return 'u';
 	}
 
 	uint8_t const *raw_shdr = (uint8_t const *)shdr;
 
-	Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Elf_Shdr)];
+	Elf_Shdr const *section =
+		(Elf_Shdr const
+			 *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Elf_Shdr)];
 	Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
-	Elf64_Xword const sh_flags = ELF_GET(elfclass, elfdata, section, sh_flags);
+	Elf64_Xword const sh_flags =
+		ELF_GET(elfclass, elfdata, section, sh_flags);
 
 	char sym_char = '?';
 
@@ -191,15 +203,20 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		} else {
 			sym_char = 'W';
 		}
-	} else if (sh_type == SHT_PROGBITS && (sh_flags & (SHF_WRITE|SHF_ALLOC)) == SHF_ALLOC) {
+	} else if (sh_type == SHT_PROGBITS &&
+		   (sh_flags & (SHF_WRITE | SHF_ALLOC)) == SHF_ALLOC) {
 		if ((sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR) {
 			sym_char = 'T';
 		} else {
 			sym_char = 'R';
 		}
-	} else if (sh_type == SHT_NOBITS && (sh_flags & (SHF_ALLOC|SHF_WRITE)) == (SHF_ALLOC|SHF_WRITE)) {
+	} else if (sh_type == SHT_NOBITS &&
+		   (sh_flags & (SHF_ALLOC | SHF_WRITE)) ==
+			   (SHF_ALLOC | SHF_WRITE)) {
 		sym_char = 'B';
-	} else if (sh_type == SHT_PROGBITS && (sh_flags & (SHF_ALLOC|SHF_WRITE)) == (SHF_ALLOC|SHF_WRITE)) {
+	} else if (sh_type == SHT_PROGBITS &&
+		   (sh_flags & (SHF_ALLOC | SHF_WRITE)) ==
+			   (SHF_ALLOC | SHF_WRITE)) {
 		sym_char = 'D';
 	} else if (st_type == STT_FUNC) {
 		sym_char = 'T';
@@ -209,7 +226,8 @@ static char _elf_symbol_type_char(Elf_Sym const *symbol, void const *shdr, uint8
 		} else {
 			sym_char = 'd';
 		}
-	} else if (st_type == STT_NOTYPE && (sh_flags & (SHF_WRITE|SHF_EXECINSTR)) == 0) {
+	} else if (st_type == STT_NOTYPE &&
+		   (sh_flags & (SHF_WRITE | SHF_EXECINSTR)) == 0) {
 		if (sh_type == SHT_PROGBITS) {
 			sym_char = 'r';
 		} else {
@@ -269,7 +287,8 @@ static int _compare_symbol(void const *p1, void const *p2)
 			i2 += 1;
 		}
 
-		if (c1 == '\0' || c2 == '\0' || ft_toupper(c1) != ft_toupper(c2)) {
+		if (c1 == '\0' || c2 == '\0' ||
+		    ft_toupper(c1) != ft_toupper(c2)) {
 			break;
 		}
 
@@ -308,7 +327,8 @@ static void _fill_valbuf(char buf[], size_t n, uint64_t value)
 	}
 }
 
-static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, Elf_Ehdr const *ehdr, char const *file)
+static int _ft_nm_elf(struct config const *config, struct memory_map const *mm,
+		      Elf_Ehdr const *ehdr, char const *file)
 {
 	bool extern_only = false;
 	bool undefined_only = false;
@@ -361,7 +381,8 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 	   table holds the value zero.
 	 */
 
-	Elf64_Half const e_shentsize = ELF_GET(elfclass, elfdata, ehdr, e_shentsize);
+	Elf64_Half const e_shentsize =
+		ELF_GET(elfclass, elfdata, ehdr, e_shentsize);
 	Elf64_Half const e_shnum = ELF_GET(elfclass, elfdata, ehdr, e_shnum);
 
 	if (!mm_check(mm, raw_shdr, e_shnum * e_shentsize)) {
@@ -369,14 +390,17 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 	}
 
 	for (Elf64_Half i = 0; i < e_shnum; i += 1) {
-		Elf_Shdr const *section = (Elf_Shdr const *)&raw_shdr[i * e_shentsize];
-		Elf64_Word const sh_type = ELF_GET(elfclass, elfdata, section, sh_type);
+		Elf_Shdr const *section =
+			(Elf_Shdr const *)&raw_shdr[i * e_shentsize];
+		Elf64_Word const sh_type =
+			ELF_GET(elfclass, elfdata, section, sh_type);
 
 		if (sh_type != SHT_SYMTAB) {
 			continue;
 		}
 
-		Elf64_Word const sh_link = ELF_GET(elfclass, elfdata, section, sh_link);
+		Elf64_Word const sh_link =
+			ELF_GET(elfclass, elfdata, section, sh_link);
 
 		if (sh_link >= e_shnum) {
 			return EXIT_FAILURE;
@@ -387,18 +411,23 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		}
 
 		symtab_shdr = section;
-		strtab_shdr = (Elf_Shdr const *)&raw_shdr[sh_link * e_shentsize];
+		strtab_shdr =
+			(Elf_Shdr const *)&raw_shdr[sh_link * e_shentsize];
 
-		Elf64_Xword const sh_size = ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
-		Elf64_Xword const sh_entsize = ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
+		Elf64_Xword const sh_size =
+			ELF_GET(elfclass, elfdata, symtab_shdr, sh_size);
+		Elf64_Xword const sh_entsize =
+			ELF_GET(elfclass, elfdata, symtab_shdr, sh_entsize);
 
 		if (sh_size % sh_entsize != 0) {
 			return EXIT_FAILURE;
 		}
 
 		sym_count = sh_size / sh_entsize;
-		string_table = (char const *)&raw_map[ELF_GET(elfclass, elfdata, strtab_shdr, sh_offset)];
-		string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata, strtab_shdr, sh_size);
+		string_table = (char const *)&raw_map[ELF_GET(
+			elfclass, elfdata, strtab_shdr, sh_offset)];
+		string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata,
+							  strtab_shdr, sh_size);
 
 		if (!mm_check(mm, string_table, string_table_length)) {
 			return EXIT_FAILURE;
@@ -423,49 +452,69 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		return EXIT_FAILURE;
 	}
 
-	uint8_t const *raw_symbol_table = &raw_map[ELF_GET(elfclass, elfdata, symtab_shdr, sh_offset)];
+	uint8_t const *raw_symbol_table =
+		&raw_map[ELF_GET(elfclass, elfdata, symtab_shdr, sh_offset)];
 	size_t sym_i = 0;
 
 	for (Elf64_Xword j = 0; j < sym_count; j += 1) {
-		Elf_Sym const *symbol = (Elf_Sym const *)&raw_symbol_table[j * ELF_SIZE(elfclass, Elf_Sym)];
+		Elf_Sym const *symbol = (Elf_Sym const *)&raw_symbol_table
+			[j * ELF_SIZE(elfclass, Elf_Sym)];
 		char const *symbol_name;
 		size_t symbol_name_length;
 		char type_char;
 
-		uint8_t const st_info = ELF_GET(elfclass, elfdata, symbol, st_info);
-		uint8_t const st_type = ELF_MATCH(elfclass, ELF64_ST_TYPE(st_info), ELF32_ST_TYPE(st_info));
+		uint8_t const st_info =
+			ELF_GET(elfclass, elfdata, symbol, st_info);
+		uint8_t const st_type = ELF_MATCH(elfclass,
+						  ELF64_ST_TYPE(st_info),
+						  ELF32_ST_TYPE(st_info));
 
 		if (st_type == STT_SECTION) {
 			if (!debug_symbols) {
 				continue;
 			}
 
-			Elf64_Section const st_shndx = ELF_GET(elfclass, elfdata, symbol, st_shndx);
-			Elf_Shdr const *section_symbol = (Elf_Shdr const *)&raw_shdr[st_shndx * ELF_SIZE(elfclass, Elf_Shdr)];
+			Elf64_Section const st_shndx =
+				ELF_GET(elfclass, elfdata, symbol, st_shndx);
+			Elf_Shdr const *section_symbol =
+				(Elf_Shdr const *)&raw_shdr[st_shndx *
+							    ELF_SIZE(elfclass,
+								     Elf_Shdr)];
 
 			if (st_shndx >= e_shnum) {
 				return EXIT_FAILURE;
 			}
 
-			Elf64_Half const e_shstrndx = ELF_GET(elfclass, elfdata, ehdr, e_shstrndx);
+			Elf64_Half const e_shstrndx =
+				ELF_GET(elfclass, elfdata, ehdr, e_shstrndx);
 
 			if (e_shstrndx >= e_shnum) {
 				return EXIT_FAILURE;
 			}
 
-			Elf_Shdr const *section_strtab = (Elf_Shdr const *)&raw_shdr[e_shstrndx * ELF_SIZE(elfclass, Elf_Shdr)];
+			Elf_Shdr const *section_strtab =
+				(Elf_Shdr const *)&raw_shdr[e_shstrndx *
+							    ELF_SIZE(elfclass,
+								     Elf_Shdr)];
 
-			Elf64_Off const sh_offset = ELF_GET(elfclass, elfdata, section_strtab, sh_offset);
-			char const *section_string_table = (char const *)&raw_map[sh_offset];
-			Elf64_Word const section_string_table_length = (Elf64_Word)ELF_GET(elfclass, elfdata, section_strtab, sh_size);
+			Elf64_Off const sh_offset = ELF_GET(
+				elfclass, elfdata, section_strtab, sh_offset);
+			char const *section_string_table =
+				(char const *)&raw_map[sh_offset];
+			Elf64_Word const section_string_table_length =
+				(Elf64_Word)ELF_GET(elfclass, elfdata,
+						    section_strtab, sh_size);
 
 			if (!mm_check(mm, string_table, string_table_length)) {
 				return EXIT_FAILURE;
 			}
 
-			char const *section_string_table_end = &section_string_table[section_string_table_length];
+			char const *section_string_table_end =
+				&section_string_table
+					[section_string_table_length];
 
-			Elf64_Word const sh_name = ELF_GET(elfclass, elfdata, section_symbol, sh_name);
+			Elf64_Word const sh_name = ELF_GET(
+				elfclass, elfdata, section_symbol, sh_name);
 
 			if (sh_name >= section_string_table_length) {
 				return EXIT_FAILURE;
@@ -476,12 +525,17 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 				symbol_name_length = 0;
 			} else {
 				symbol_name = &section_string_table[sh_name];
-				symbol_name_length = ft_strnlen(symbol_name, (size_t)(section_string_table_end - symbol_name));
+				symbol_name_length = ft_strnlen(
+					symbol_name,
+					(size_t)(section_string_table_end -
+						 symbol_name));
 			}
 
-			type_char = _elf_section_type_char(section_symbol, symbol_name, elfclass, elfdata);
+			type_char = _elf_section_type_char(
+				section_symbol, symbol_name, elfclass, elfdata);
 		} else {
-			Elf64_Word const st_name = ELF_GET(elfclass, elfdata, symbol, st_name);
+			Elf64_Word const st_name =
+				ELF_GET(elfclass, elfdata, symbol, st_name);
 
 			if (st_name >= string_table_length) {
 				return EXIT_FAILURE;
@@ -492,10 +546,13 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 				symbol_name_length = 0;
 			} else {
 				symbol_name = &string_table[st_name];
-				symbol_name_length = ft_strnlen(symbol_name, (size_t)(string_table_end - symbol_name));
+				symbol_name_length = ft_strnlen(
+					symbol_name, (size_t)(string_table_end -
+							      symbol_name));
 			}
 
-			type_char = _elf_symbol_type_char(symbol, raw_shdr, elfclass, elfdata);
+			type_char = _elf_symbol_type_char(symbol, raw_shdr,
+							  elfclass, elfdata);
 		}
 
 		if (type_char != 'a' && symbol_name[0] == '\0') {
@@ -511,7 +568,7 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		}
 
 		if (extern_only) {
-			switch (type_char){
+			switch (type_char) {
 			case 'B':
 			case 'D':
 			case 'R':
@@ -548,7 +605,8 @@ static int _ft_nm_elf(struct config const *config, struct memory_map const *mm, 
 		case 'V':
 		case 'W':
 			symbols[sym_i].has_value = 1;
-			symbols[sym_i].value = ELF_GET(elfclass, elfdata, symbol, st_value);
+			symbols[sym_i].value =
+				ELF_GET(elfclass, elfdata, symbol, st_value);
 			break;
 
 		default:
@@ -641,7 +699,8 @@ static int _check_ehdr(char const *file, Elf_Ehdr const *ehdr)
 	return EXIT_SUCCESS;
 }
 
-static int ft_nm_elf(struct config const *config, struct memory_map const *mm, char const *file)
+static int ft_nm_elf(struct config const *config, struct memory_map const *mm,
+		     char const *file)
 {
 	Elf_Ehdr const *ehdr = mm->start;
 	int check_header = _check_ehdr(file, ehdr);
@@ -653,7 +712,8 @@ static int ft_nm_elf(struct config const *config, struct memory_map const *mm, c
 	return _ft_nm_elf(config, mm, ehdr, file);
 }
 
-static int ft_nm_map(struct config const *config, void const *map, size_t map_size, char const *file)
+static int ft_nm_map(struct config const *config, void const *map,
+		     size_t map_size, char const *file)
 {
 	struct memory_map root_map = mm_new(map, map_size);
 	uint8_t const *e_ident = map;
@@ -702,7 +762,7 @@ static int ft_nm_file(struct config const *config, char const *file)
 
 	do {
 		/* O_NONBLOCK to avoid blocking on named pipes (FIFOs) */
-		fd = open(file, O_RDONLY|O_NONBLOCK);
+		fd = open(file, O_RDONLY | O_NONBLOCK);
 		if (fd == -1) {
 			err = errno;
 			err_msg = strerror(err);
