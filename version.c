@@ -1,15 +1,15 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   version.h                                          :+:      :+:    :+:   */
+/*   version.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/30 14:23:24 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/30 12:12:09 by bbrassar         ###   ########.fr       */
+/*   Created: 2024/07/30 12:08:39 by bbrassar          #+#    #+#             */
+/*   Updated: 2024/07/30 12:12:07 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#include "version.h"
 
-extern char const *VERSION_STRING;
+char const *VERSION_STRING = "1.0.0";

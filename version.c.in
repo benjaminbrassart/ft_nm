@@ -1,8 +1,0 @@
-#include "version.h"
-
-unsigned int const VERSION_MAJOR = ${VERSION_MAJOR};
-unsigned int const VERSION_MINOR = ${VERSION_MINOR};
-unsigned int const VERSION_PATCH = ${VERSION_PATCH};
-
-char const *VERSION_COMMIT = "${VERSION_COMMIT}";
-char const *VERSION_STRING = "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+${VERSION_COMMIT}";
