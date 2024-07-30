@@ -12,16 +12,16 @@
 
 #include "ft_ext.h"
 
+#include <stdint.h>
+
 struct array {
-	unsigned char *data;
+	uint8_t *data;
 	size_t memb_size;
 };
-
-// TODO optimize
 static void _swap(struct array *arr, size_t a, size_t b) {
-	unsigned char *p = arr->data + a * arr->memb_size;
-	unsigned char *q = arr->data + b * arr->memb_size;
-	unsigned char tmp;
+	uint8_t *p = arr->data + a * arr->memb_size;
+	uint8_t *q = arr->data + b * arr->memb_size;
+	uint8_t tmp;
 
 	for (size_t i = 0; i < arr->memb_size; i++) {
 		tmp = p[i];
@@ -30,8 +30,9 @@ static void _swap(struct array *arr, size_t a, size_t b) {
 	}
 }
 
-static size_t _partition(struct array *arr, size_t low, size_t high, cmp_func_t *cmp) {
-	unsigned char const *pivot = arr->data + high * arr->memb_size;
+static size_t _partition(struct array *arr, size_t low, size_t high, cmp_func_t *cmp)
+{
+	uint8_t const *pivot = arr->data + high * arr->memb_size;
 	size_t i = low;
 
 	for (size_t j = low; j < high; j++) {
@@ -45,7 +46,8 @@ static size_t _partition(struct array *arr, size_t low, size_t high, cmp_func_t 
 	return i;
 }
 
-static void _quicksort(struct array *arr, size_t low, size_t high, cmp_func_t *cmp) {
+static void _quicksort(struct array *arr, size_t low, size_t high, cmp_func_t *cmp)
+{
 	size_t pivot;
 
 	if (low < high) {
