@@ -6,7 +6,7 @@
 #    By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/30 10:36:54 by bbrassar          #+#    #+#              #
-#    Updated: 2024/07/30 12:09:27 by bbrassar         ###   ########.fr        #
+#    Updated: 2024/08/28 15:42:32 by bbrassar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ NAME_LIBFT := libft.a
 DIR_OBJ := .
 
 override SRC := main.c options.c config.c version.c \
-		memory_map.c ft_qsort.c bswap.c
+		memory_map.c ft_qsort.c bswap.c elf_utils.c
 override OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 override DEP := $(OBJ:.o=.d)
 
