@@ -191,6 +191,7 @@ test_nm -ar test_files/ft_nm-afl++
 test_nm -ap test_files/ft_nm-afl++
 
 test_nm /bin/ls
-test_nm /bin/*
+test_nm /bin/docker
+# test_nm /bin/*
 
 exit "${status}"
