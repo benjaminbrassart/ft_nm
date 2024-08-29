@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/28 15:42:04 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/08/29 16:10:01 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 18:00:47 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,11 +160,11 @@ int _compare_symbol(void const *p1, void const *p2)
 	i1 = 0;
 	i2 = 0;
 
-	while (1) {
+	while (true) {
 		char c1;
 		char c2;
 
-		while (1) {
+		while (true) {
 			c1 = _symbol_name_at(sym1, i1);
 			if (c1 == '\0' || ft_isalnum(c1)) {
 				break;
@@ -172,7 +172,7 @@ int _compare_symbol(void const *p1, void const *p2)
 			i1 += 1;
 		}
 
-		while (1) {
+		while (true) {
 			c2 = _symbol_name_at(sym2, i2);
 			if (c2 == '\0' || ft_isalnum(c2)) {
 				break;
@@ -195,11 +195,11 @@ int _compare_symbol(void const *p1, void const *p2)
 	i1 = 0;
 	i2 = 0;
 
-	while (1) {
+	while (true) {
 		char c1;
 		char c2;
 
-		while (1) {
+		while (true) {
 			c1 = _symbol_name_at(sym1, i1);
 			if (c1 == '\0' || ft_isalnum(c1)) {
 				break;
@@ -207,7 +207,7 @@ int _compare_symbol(void const *p1, void const *p2)
 			i1 += 1;
 		}
 
-		while (1) {
+		while (true) {
 			c2 = _symbol_name_at(sym2, i2);
 			if (c2 == '\0' || ft_isalnum(c2)) {
 				break;
@@ -231,7 +231,7 @@ int _compare_symbol(void const *p1, void const *p2)
 	char c1;
 	char c2;
 
-	while (1) {
+	while (true) {
 		c1 = _symbol_name_at(sym1, i);
 		c2 = _symbol_name_at(sym2, i);
 
