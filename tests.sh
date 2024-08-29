@@ -3,6 +3,7 @@
 # shellcheck enable=style
 # shellcheck shell=dash
 
+check_stderr=0
 test_count=0
 status=0
 use_valgrind=
@@ -22,6 +23,10 @@ if [ -n "${USE_VALGRIND}" ]; then
         printf 'Warning: could not parse valgrind version (is it in PATH?)\n' >&2
         exit 1
     fi
+fi
+
+if [ -n "${CHECK_STDERR}" ]; then
+    check_stderr=1
 fi
 
 pid="$$"
@@ -91,25 +96,41 @@ test_nm() {
         "logs/${test_count}/stdout.nm.log" \
         > "logs/${test_count}/stdout.diff"
 
-status_stdout="$?"
+    status_stdout="$?"
 
-    git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
-        "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
-        "logs/${test_count}/stderr.nm.log"
-    git --no-pager diff --no-prefix --no-index \
-        "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
-        "logs/${test_count}/stderr.nm.log" \
-        > "logs/${test_count}/stderr.diff"
+    status_stderr=0
 
-    status_stderr="$?"
+    if [ "${check_stderr}" -ne "0" ]; then
+        git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
+            "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
+            "logs/${test_count}/stderr.nm.log"
+        git --no-pager diff --no-prefix --no-index \
+            "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
+            "logs/${test_count}/stderr.nm.log" \
+            > "logs/${test_count}/stderr.diff"
+
+        status_stderr="$?"
+    fi
+
+    ok=1
 
     if [ "${status_stdout}" -ne "0" ] || [ "${status_stderr}" -ne "0" ]; then
         status="1"
+        ok="0"
         printf -- "\n  KO: check diff\n"
-    elif [ "${exit_nm}" -ne "${exit_ft}" ]; then
+    fi
+
+    if [ "${exit_nm}" -ne "${exit_ft}" ]; then
+        if [ "${ok}" -eq "1" ]; then
+            printf -- " \n"
+        fi
+
         status="1"
-        printf -- "\n  KO: exit status (nm=%d, ft=%d)\n" "${exit_nm}" "${exit_ft}"
-    else
+        ok="0"
+        printf -- "  KO: exit status (nm=%d, ft=%d)\n" "${exit_nm}" "${exit_ft}"
+    fi
+
+    if [ "${ok}" -eq "1" ]; then
         printf -- "  OK\n"
     fi
 
