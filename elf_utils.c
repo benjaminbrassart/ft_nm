@@ -6,11 +6,12 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/28 15:42:04 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/08/28 15:43:53 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 16:10:01 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "elf_utils.h"
+#include "ft_ext.h"
 
 #include "libft/ft.h"
 
@@ -152,62 +153,92 @@ int _compare_symbol(void const *p1, void const *p2)
 {
 	struct symbol const *sym1 = p1;
 	struct symbol const *sym2 = p2;
-	size_t i1 = 0;
-	size_t i2 = 0;
-	char c1;
-	char c2;
 
-	if (sym1->name == sym2->name) {
-		return 0;
-	}
+	size_t i1;
+	size_t i2;
 
-	if (sym1->name == NULL) {
-		return 1;
-	} else if (sym2->name == NULL) {
-		return -1;
-	}
+	i1 = 0;
+	i2 = 0;
 
-	while (true) {
-		while (true) {
+	while (1) {
+		char c1;
+		char c2;
+
+		while (1) {
 			c1 = _symbol_name_at(sym1, i1);
-			if (ft_isalnum(c1) || c1 == '\0') {
+			if (c1 == '\0' || ft_isalnum(c1)) {
 				break;
 			}
 			i1 += 1;
 		}
 
-		while (true) {
+		while (1) {
 			c2 = _symbol_name_at(sym2, i2);
-			if (ft_isalnum(c2) || c2 == '\0') {
+			if (c2 == '\0' || ft_isalnum(c2)) {
 				break;
 			}
 			i2 += 1;
 		}
 
-		if (c1 == '\0' || c2 == '\0' ||
-		    ft_toupper(c1) != ft_toupper(c2)) {
+		if (ft_toupper(c1) != ft_toupper(c2)) {
+			return ft_toupper(c1) - ft_toupper(c2);
+		}
+
+		if (c1 == '\0' && c2 == '\0') {
 			break;
 		}
 
-		i1 += 1;
-		i2 += 1;
+		i1++;
+		i2++;
 	}
 
-	// taking into account only alphanumeric ascii characters, s1 == s2.
-	//
-	// perform 'normal' ascii comparison, so that, for example,
-	// '__data_start' appears before 'data_start'.
-	if (c1 == '\0' && c2 == '\0') {
-		size_t i_min;
+	i1 = 0;
+	i2 = 0;
 
-		if (sym1->name_length > sym2->name_length) {
-			i_min = sym2->name_length;
-		} else {
-			i_min = sym1->name_length;
+	while (1) {
+		char c1;
+		char c2;
+
+		while (1) {
+			c1 = _symbol_name_at(sym1, i1);
+			if (c1 == '\0' || ft_isalnum(c1)) {
+				break;
+			}
+			i1 += 1;
 		}
 
-		return ft_strncmp(sym1->name, sym2->name, i_min);
+		while (1) {
+			c2 = _symbol_name_at(sym2, i2);
+			if (c2 == '\0' || ft_isalnum(c2)) {
+				break;
+			}
+			i2 += 1;
+		}
+
+		if (c1 != c2) {
+			return ft_isupper(c1) - ft_isupper(c2);
+		}
+
+		if (c1 == '\0' && c2 == '\0') {
+			break;
+		}
+
+		i1++;
+		i2++;
 	}
 
-	return ft_toupper(c1) - ft_toupper(c2);
+	size_t i = 0;
+	char c1;
+	char c2;
+
+	while (1) {
+		c1 = _symbol_name_at(sym1, i);
+		c2 = _symbol_name_at(sym2, i);
+
+		if (c1 == '\0' || c2 == '\0' || ft_tolower(c1) != ft_tolower(c2)) {
+			return ft_tolower(c1) - ft_tolower(c2);
+		}
+
+		i += 1;
+	}
 }
