@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 12:30:25 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/30 12:12:12 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 18:31:16 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ enum option_name {
 	OptionNoSort,
 	OptionReverseSort,
 	OptionUndefinedOnly,
-	OptionUnicode,
 	OptionHelp,
 	OptionVersion,
 };

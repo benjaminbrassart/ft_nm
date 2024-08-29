@@ -6,20 +6,11 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 12:18:51 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/30 12:12:38 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 18:30:58 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-
-enum unicode_display {
-	UnicodeDisplayDefault,
-	UnicodeDisplayShow,
-	UnicodeDisplayInvalid,
-	UnicodeDisplayHex,
-	UnicodeDisplayEscape,
-	UnicodeDisplayHighlight,
-};
 
 struct config {
 	/** -a, --debug-syms */
@@ -36,8 +27,6 @@ struct config {
 	unsigned display_version : 1;
 	/** */
 	unsigned print_file_name : 1;
-	/** --unicode */
-	enum unicode_display unicode_display;
 };
 
 extern struct config const DEFAULT_CONFIG;

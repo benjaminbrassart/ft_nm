@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 11:00:24 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/30 12:12:14 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 18:31:32 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,9 +48,6 @@ static struct option const OPTIONS[] = {
 	    "Reverse the sense of the sort", false),
 	OPT(UndefinedOnly, 'u', "undefined-only", Denied,
 	    "Display only undefined symbols", false),
-	OPT_LONG(Unicode, "unicode", Required,
-		 "Specify how to treat UTF-8 encoded unicode characters",
-		 false),
 	OPT(Help, 'h', "help", Denied, "Display help information and exit",
 	    true),
 	OPT(Version, 'V', "version", Denied, "Display version and exit", false),
@@ -141,6 +138,8 @@ static void _display_help(int fd)
 static int _handle_option(enum option_name name, char const *value,
 			  struct config *conf)
 {
+	(void)value;
+
 	switch (name) {
 	case OptionDebugSymbols:
 		conf->debug_symbols = 1;
@@ -156,27 +155,6 @@ static int _handle_option(enum option_name name, char const *value,
 		break;
 	case OptionUndefinedOnly:
 		conf->undefined_only = 1;
-		break;
-	case OptionUnicode:
-		if (ft_strcmp(value, "default") == 0) {
-			conf->unicode_display = UnicodeDisplayDefault;
-		} else if (ft_strcmp(value, "show") == 0) {
-			conf->unicode_display = UnicodeDisplayShow;
-		} else if (ft_strcmp(value, "invalid") == 0) {
-			conf->unicode_display = UnicodeDisplayInvalid;
-		} else if (ft_strcmp(value, "hex") == 0) {
-			conf->unicode_display = UnicodeDisplayHex;
-		} else if (ft_strcmp(value, "escape") == 0) {
-			conf->unicode_display = UnicodeDisplayEscape;
-		} else if (ft_strcmp(value, "highlight") == 0) {
-			conf->unicode_display = UnicodeDisplayHighlight;
-		} else {
-			write(STDERR_FILENO,
-			      "ft_nm: invalid argument to -U/--unicode: ", 41);
-			write(STDERR_FILENO, value, ft_strlen(value));
-			write(STDERR_FILENO, "\n", 1);
-			return EXIT_FAILURE;
-		}
 		break;
 	case OptionVersion:
 		conf->display_version = 1;

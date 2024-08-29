@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/30 14:08:35 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/07/21 21:09:18 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/29 18:31:03 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,5 +19,4 @@ struct config const DEFAULT_CONFIG = {
 	.reverse_sort = 0,
 	.undefined_only = 0,
 	.display_version = 0,
-	.unicode_display = UnicodeDisplayDefault,
 };
