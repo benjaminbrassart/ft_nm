@@ -140,83 +140,79 @@ test_nm() {
 rm -rf logs
 mkdir -p logs
 
-# test_nm
-# test_nm a.out
+test_nm
+test_nm a.out
 
-# test_nm --
-# test_nm -- a.out
+test_nm --
+test_nm -- a.out
 
-# test_nm -a
-# test_nm -a a.out
+test_nm -a
+test_nm -a a.out
 
-# test_nm -a --
-# test_nm -a -- a.out
+test_nm -a --
+test_nm -a -- a.out
 
-# test_nm -r --
-# test_nm -r -- a.out
+test_nm -r --
+test_nm -r -- a.out
 
-# test_nm -p --
-# test_nm -p -- a.out
+test_nm -p --
+test_nm -p -- a.out
 
-# test_nm -rp --
-# test_nm -rp -- a.out
+test_nm -rp --
+test_nm -rp -- a.out
 
-# test_nm -rpa -- ft_nm
+test_nm -rpa -- ft_nm
 
-# test_nm -a --
-# test_nm -a -- ft_nm
-# test_nm -a -- does_not_exist
-# test_nm -a -- does_not_exist a.out
-# test_nm -a -- does_not_exist ft_nm
-# test_nm -a -- ft_nm ft_nm
+test_nm -a --
+test_nm -a -- ft_nm
+test_nm -a -- does_not_exist
+test_nm -a -- does_not_exist a.out
+test_nm -a -- does_not_exist ft_nm
+test_nm -a -- ft_nm ft_nm
 
-# test_nm $(seq 255)
-# test_nm $(seq 256)
+test_nm $(seq 255)
+test_nm $(seq 256)
 
-# test_nm -- ft_nm
-# test_nm -- ft_nm ft_nm
+test_nm -- ft_nm
+test_nm -- ft_nm ft_nm
 
-# test_nm -u -- ft_nm
-# test_nm -u -- ft_nm ft_nm
+test_nm -u -- ft_nm
+test_nm -u -- ft_nm ft_nm
 
-# test_nm -g -- ft_nm
-# test_nm -g -- ft_nm ft_nm
+test_nm -g -- ft_nm
+test_nm -g -- ft_nm ft_nm
 
-# test_nm -gu -- ft_nm
-# test_nm -gu -- ft_nm ft_nm
+test_nm -gu -- ft_nm
+test_nm -gu -- ft_nm ft_nm
 
-# test_nm -ug -- ft_nm
-# test_nm -ug -- ft_nm ft_nm
+test_nm -ug -- ft_nm
+test_nm -ug -- ft_nm ft_nm
 
-# test_nm -ug -u -- ft_nm
-# test_nm -ug -u -- ft_nm ft_nm
+test_nm -ug -u -- ft_nm
+test_nm -ug -u -- ft_nm ft_nm
 
-# test_nm -agurp -- ft_nm ft_nm
+test_nm -agurp -- ft_nm ft_nm
 
-# test_nm -- *.o
-# test_nm -a -- *.o
-# test_nm -u -- *.o
-# test_nm -g -- *.o
-# test_nm -ga -- *.o
-# test_nm -au -- *.o
-# test_nm -a -- test_files/libnm.so
+test_nm -- *.o
+test_nm -a -- *.o
+test_nm -u -- *.o
+test_nm -g -- *.o
+test_nm -ga -- *.o
+test_nm -au -- *.o
+test_nm -a -- test_files/libnm.so
 
-# test_nm -- test_files/*.o
-# test_nm -a test_files/*.o
-# test_nm -a test_files/ft_nm-afl++
-# test_nm -g test_files/ft_nm-afl++
-# test_nm -u test_files/ft_nm-afl++
-# test_nm -ur test_files/ft_nm-afl++
-# test_nm -up test_files/ft_nm-afl++
-# test_nm -ar test_files/ft_nm-afl++
-# test_nm -ap test_files/ft_nm-afl++
+test_nm -- test_files/*.o
+test_nm -a test_files/*.o
+test_nm -a test_files/ft_nm-afl++
+test_nm -g test_files/ft_nm-afl++
+test_nm -u test_files/ft_nm-afl++
+test_nm -ur test_files/ft_nm-afl++
+test_nm -up test_files/ft_nm-afl++
+test_nm -ar test_files/ft_nm-afl++
+test_nm -ap test_files/ft_nm-afl++
 
-# test_nm /bin/ls
-# test_nm /bin/docker
-# test_nm /bin/*
-
-for orc in orcs/*/*; do
-    test_nm "${orc}"
-done
+test_nm /bin/ls
+test_nm /bin/docker
+test_nm /bin/*
 
 exit "${status}"
