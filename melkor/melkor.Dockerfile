@@ -24,6 +24,6 @@ COPY --from=build /build/melkor/melkor /usr/local/bin/melkor
 COPY --from=build /build/melkor/test_fuzzed.sh /usr/local/bin/test_fuzzed
 COPY --from=build /build/melkor/templates /melkor/templates
 
-WORKDIR /melkor/templates
+VOLUME /melkor/orcs
 
-# ENTRYPOINT ["melkor"]
+WORKDIR /melkor/orcs
