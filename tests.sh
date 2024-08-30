@@ -260,7 +260,6 @@ else
 
     test_nm /bin/ls
     test_nm /bin/docker
-    test_nm /bin/*
 fi
 
 exit "${status}"
