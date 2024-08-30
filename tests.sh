@@ -3,10 +3,36 @@
 # shellcheck enable=style
 # shellcheck shell=dash
 
+#
+# USAGE:
+#
+# This script has several configuration options you may enable or disable
+# to test specific behaviors. Here are the currently supported options:
+#
+# CHECK_STDERR: string
+#   Set to non-empty to check stderr output diff.
+#
+# USE_VALGRIND: string
+#   Set to non-empty to wrap ft_nm calls with valgrind.
+#   Requires valgrind >= 3.24.0.
+#
+# DIFF_STYLE: enum(line|normal|word)
+#   Set diff output style, defaults to "word".
+#
+# In addition to these switches, you may specify custom test files
+# as arguments, like this:
+#
+# ./tests.sh -g -- /bin/ls ./foo.o
+#
+# All arguments are passed to ONE ft_nm invokation. It currenly is not
+# possible to create multiple ft_nm calls.
+#
+
 check_stderr=0
 test_count=0
 status=0
 use_valgrind=
+diff_style=word
 
 if [ -n "${USE_VALGRIND}" ]; then
     if valgrind_version="$(valgrind --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"; then
@@ -23,6 +49,20 @@ if [ -n "${USE_VALGRIND}" ]; then
         printf 'Warning: could not parse valgrind version (is it in PATH?)\n' >&2
         exit 1
     fi
+fi
+
+if [ -n "${DIFF_STYLE}" ]; then
+    case "${DIFF_STYLE}" in
+        word|line)
+            diff_style="${DIFF_STYLE}"
+            ;;
+        normal)
+            diff_style="line"
+            ;;
+        *)
+            printf -- 'Unknown diff style: %s\n' "${DIFF_STYLE}" >&2
+            exit 1
+    esac
 fi
 
 if [ -n "${CHECK_STDERR}" ]; then
@@ -88,7 +128,11 @@ test_nm() {
     exit_ft="$?"
     echo "${exit_ft}" > "logs/${test_count}/exit.ft.log"
 
-    git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
+    if [ "${diff_style}" = word ]; then
+        git_diff_opts="--word-diff=color --word-diff-regex=."
+    fi
+
+    git --no-pager diff --no-prefix --no-index ${git_diff_opts} \
         "logs/${test_count}/stdout.ft.log" \
         "logs/${test_count}/stdout.nm.log"
     git --no-pager diff --no-prefix --no-index \
@@ -101,7 +145,7 @@ test_nm() {
     status_stderr=0
 
     if [ "${check_stderr}" -ne "0" ]; then
-        git --no-pager diff --no-prefix --no-index --word-diff=color --word-diff-regex=. \
+        git --no-pager diff --no-prefix --no-index ${git_diff_opts} \
             "$(< logs/${test_count}/stderr.ft.log convert_error_message | psub)" \
             "logs/${test_count}/stderr.nm.log"
         git --no-pager diff --no-prefix --no-index \
@@ -140,79 +184,83 @@ test_nm() {
 rm -rf logs
 mkdir -p logs
 
-test_nm
-test_nm a.out
+if [ "$#" -ne 0 ]; then
+    test_nm "$@"
+else
+    test_nm
+    test_nm a.out
 
-test_nm --
-test_nm -- a.out
+    test_nm --
+    test_nm -- a.out
 
-test_nm -a
-test_nm -a a.out
+    test_nm -a
+    test_nm -a a.out
 
-test_nm -a --
-test_nm -a -- a.out
+    test_nm -a --
+    test_nm -a -- a.out
 
-test_nm -r --
-test_nm -r -- a.out
+    test_nm -r --
+    test_nm -r -- a.out
 
-test_nm -p --
-test_nm -p -- a.out
+    test_nm -p --
+    test_nm -p -- a.out
 
-test_nm -rp --
-test_nm -rp -- a.out
+    test_nm -rp --
+    test_nm -rp -- a.out
 
-test_nm -rpa -- ft_nm
+    test_nm -rpa -- ft_nm
 
-test_nm -a --
-test_nm -a -- ft_nm
-test_nm -a -- does_not_exist
-test_nm -a -- does_not_exist a.out
-test_nm -a -- does_not_exist ft_nm
-test_nm -a -- ft_nm ft_nm
+    test_nm -a --
+    test_nm -a -- ft_nm
+    test_nm -a -- does_not_exist
+    test_nm -a -- does_not_exist a.out
+    test_nm -a -- does_not_exist ft_nm
+    test_nm -a -- ft_nm ft_nm
 
-test_nm $(seq 255)
-test_nm $(seq 256)
+    test_nm $(seq 255)
+    test_nm $(seq 256)
 
-test_nm -- ft_nm
-test_nm -- ft_nm ft_nm
+    test_nm -- ft_nm
+    test_nm -- ft_nm ft_nm
 
-test_nm -u -- ft_nm
-test_nm -u -- ft_nm ft_nm
+    test_nm -u -- ft_nm
+    test_nm -u -- ft_nm ft_nm
 
-test_nm -g -- ft_nm
-test_nm -g -- ft_nm ft_nm
+    test_nm -g -- ft_nm
+    test_nm -g -- ft_nm ft_nm
 
-test_nm -gu -- ft_nm
-test_nm -gu -- ft_nm ft_nm
+    test_nm -gu -- ft_nm
+    test_nm -gu -- ft_nm ft_nm
 
-test_nm -ug -- ft_nm
-test_nm -ug -- ft_nm ft_nm
+    test_nm -ug -- ft_nm
+    test_nm -ug -- ft_nm ft_nm
 
-test_nm -ug -u -- ft_nm
-test_nm -ug -u -- ft_nm ft_nm
+    test_nm -ug -u -- ft_nm
+    test_nm -ug -u -- ft_nm ft_nm
 
-test_nm -agurp -- ft_nm ft_nm
+    test_nm -agurp -- ft_nm ft_nm
 
-test_nm -- *.o
-test_nm -a -- *.o
-test_nm -u -- *.o
-test_nm -g -- *.o
-test_nm -ga -- *.o
-test_nm -au -- *.o
-test_nm -a -- test_files/libnm.so
+    test_nm -- *.o
+    test_nm -a -- *.o
+    test_nm -u -- *.o
+    test_nm -g -- *.o
+    test_nm -ga -- *.o
+    test_nm -au -- *.o
+    test_nm -a -- test_files/libnm.so
 
-test_nm -- test_files/*.o
-test_nm -a test_files/*.o
-test_nm -a test_files/ft_nm-afl++
-test_nm -g test_files/ft_nm-afl++
-test_nm -u test_files/ft_nm-afl++
-test_nm -ur test_files/ft_nm-afl++
-test_nm -up test_files/ft_nm-afl++
-test_nm -ar test_files/ft_nm-afl++
-test_nm -ap test_files/ft_nm-afl++
+    test_nm -- test_files/*.o
+    test_nm -a test_files/*.o
+    test_nm -a test_files/ft_nm-afl++
+    test_nm -g test_files/ft_nm-afl++
+    test_nm -u test_files/ft_nm-afl++
+    test_nm -ur test_files/ft_nm-afl++
+    test_nm -up test_files/ft_nm-afl++
+    test_nm -ar test_files/ft_nm-afl++
+    test_nm -ap test_files/ft_nm-afl++
 
-test_nm /bin/ls
-test_nm /bin/docker
-test_nm /bin/*
+    test_nm /bin/ls
+    test_nm /bin/docker
+    test_nm /bin/*
+fi
 
 exit "${status}"
