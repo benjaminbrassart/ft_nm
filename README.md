@@ -1,3 +1,7 @@
+# MERCI JFREMOND ET YMARCILL
+
+Use nm with env variable LANG=C for a sort order that makes sense.
+
 ## Executable and Linkable Format (ELF)
 
 ### Symbol characters

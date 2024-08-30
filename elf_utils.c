@@ -6,7 +6,7 @@
 /*   By: bbrassar <bbrassar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/28 15:42:04 by bbrassar          #+#    #+#             */
-/*   Updated: 2024/08/29 18:00:47 by bbrassar         ###   ########.fr       */
+/*   Updated: 2024/08/30 16:54:28 by bbrassar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,91 +154,127 @@ int _compare_symbol(void const *p1, void const *p2)
 	struct symbol const *sym1 = p1;
 	struct symbol const *sym2 = p2;
 
-	size_t i1;
-	size_t i2;
+	// size_t i1;
+	// size_t i2;
 
-	i1 = 0;
-	i2 = 0;
+	// i1 = 0;
+	// i2 = 0;
 
-	while (true) {
-		char c1;
-		char c2;
+	// while (true) {
+	// 	char c1;
+	// 	char c2;
 
-		while (true) {
-			c1 = _symbol_name_at(sym1, i1);
-			if (c1 == '\0' || ft_isalnum(c1)) {
-				break;
-			}
-			i1 += 1;
-		}
+	// 	while (true) {
+	// 		c1 = _symbol_name_at(sym1, i1);
+	// 		if (c1 == '\0' || ft_isalnum(c1) || c1 == '$') {
+	// 			break;
+	// 		}
+	// 		i1 += 1;
+	// 	}
 
-		while (true) {
-			c2 = _symbol_name_at(sym2, i2);
-			if (c2 == '\0' || ft_isalnum(c2)) {
-				break;
-			}
-			i2 += 1;
-		}
+	// 	while (true) {
+	// 		c2 = _symbol_name_at(sym2, i2);
+	// 		if (c2 == '\0' || ft_isalnum(c2) || c2 == '$') {
+	// 			break;
+	// 		}
+	// 		i2 += 1;
+	// 	}
 
-		if (ft_toupper(c1) != ft_toupper(c2)) {
-			return ft_toupper(c1) - ft_toupper(c2);
-		}
+	// 	if (ft_toupper(c1) != ft_toupper(c2)) {
+	// 		return ft_toupper(c1) - ft_toupper(c2);
+	// 	}
 
-		if (c1 == '\0' && c2 == '\0') {
-			break;
-		}
+	// 	if (c1 == '\0' && c2 == '\0') {
+	// 		break;
+	// 	}
 
-		i1++;
-		i2++;
-	}
+	// 	i1++;
+	// 	i2++;
+	// }
 
-	i1 = 0;
-	i2 = 0;
+	// i1 = 0;
+	// i2 = 0;
 
-	while (true) {
-		char c1;
-		char c2;
+	// while (true) {
+	// 	char c1;
+	// 	char c2;
 
-		while (true) {
-			c1 = _symbol_name_at(sym1, i1);
-			if (c1 == '\0' || ft_isalnum(c1)) {
-				break;
-			}
-			i1 += 1;
-		}
+	// 	while (true) {
+	// 		c1 = _symbol_name_at(sym1, i1);
+	// 		if (c1 == '\0' || ft_isalnum(c1)) {
+	// 			break;
+	// 		}
+	// 		i1 += 1;
+	// 	}
 
-		while (true) {
-			c2 = _symbol_name_at(sym2, i2);
-			if (c2 == '\0' || ft_isalnum(c2)) {
-				break;
-			}
-			i2 += 1;
-		}
+	// 	while (true) {
+	// 		c2 = _symbol_name_at(sym2, i2);
+	// 		if (c2 == '\0' || ft_isalnum(c2)) {
+	// 			break;
+	// 		}
+	// 		i2 += 1;
+	// 	}
 
-		if (c1 != c2) {
-			return ft_isupper(c1) - ft_isupper(c2);
-		}
+	// 	if (c1 != c2) {
+	// 		return ft_isupper(c1) - ft_isupper(c2);
+	// 	}
 
-		if (c1 == '\0' && c2 == '\0') {
-			break;
-		}
+	// 	if (c1 == '\0' && c2 == '\0') {
+	// 		break;
+	// 	}
 
-		i1++;
-		i2++;
-	}
+	// 	i1++;
+	// 	i2++;
+	// }
 
-	size_t i = 0;
+	size_t i;
 	char c1;
 	char c2;
+
+	// i = 0;
+
+	// while (true) {
+	// 	c1 = _symbol_name_at(sym1, i);
+	// 	c2 = _symbol_name_at(sym2, i);
+
+	// 	if (c1 != c2) {
+	// 		if (ft_isalnum(c1) != ft_isalnum(c2)) {
+
+	// 		}
+
+	// 		return c1 - c2;
+	// 	}
+
+	// 	if (c1 == '\0' || c2 == '\0') {
+	// 		break;
+	// 	}
+
+	// 	i += 1;
+	// }
+
+	i = 0;
 
 	while (true) {
 		c1 = _symbol_name_at(sym1, i);
 		c2 = _symbol_name_at(sym2, i);
 
-		if (c1 == '\0' || c2 == '\0' || ft_tolower(c1) != ft_tolower(c2)) {
-			return ft_tolower(c1) - ft_tolower(c2);
+		if (c1 != c2) {
+			return c1 - c2;
+		}
+
+		if (c1 == '\0' || c2 == '\0') {
+			break;
 		}
 
 		i += 1;
 	}
+
+	// if names are equal byte-for-byte, sort by symbol value
+	if (sym1->value > sym2->value) {
+		return 1;
+	} else if (sym1->value < sym2->value) {
+		return -1;
+	}
+
+	return 0;
 }

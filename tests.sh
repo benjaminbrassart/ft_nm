@@ -28,6 +28,8 @@
 # possible to create multiple ft_nm calls.
 #
 
+export LANG=C
+
 check_stderr=0
 test_count=0
 status=0
