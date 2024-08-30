@@ -22,7 +22,7 @@ override SRC := main.c options.c config.c version.c \
 override OBJ := $(SRC:%.c=$(DIR_OBJ)/%.c.o)
 override DEP := $(OBJ:.o=.d)
 
-override _CFLAGS := -Wall -Wextra -Wconversion
+override _CFLAGS := -Wall -Wextra -Wconversion -Werror -c
 override _CPPFLAGS := -I . -I $(DIR_LIBFT)/include -std=c11 \
 		      -MMD -MP -D_GNU_SOURCE
 override _LDFLAGS := -L$(DIR_LIBFT)
@@ -36,7 +36,7 @@ $(DIR_OBJ)/bswap.c.o: CFLAGS += -O2
 $(OBJ): .EXTRA_PREREQS = $(MAKEFILE)
 $(OBJ): $(DIR_OBJ)/%.c.o: %.c
 	@mkdir -p $(@D)
-	$(CC) $(_CFLAGS) $(CFLAGS) $(_CPPFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(_CFLAGS) $(CFLAGS) $(_CPPFLAGS) $(CPPFLAGS) $< -o $@
 
 $(DIR_LIBFT)/$(NAME_LIBFT):
 	$(MAKE) -C $(DIR_LIBFT) $(NAME_LIBFT)
